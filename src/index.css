@@ -1,0 +1,635 @@
+*, *::before, *::after {
+    box-sizing: border-box;              /*Box-Sizing auf Border-Box setzen für alle Elemente*/
+}
+@font-face {
+    font-family: 'StrawberryMuffins';
+    src: url('fonts/Strawberry Muffins Demo.ttf') format('truetype');
+}
+
+body {
+    background-color: #c4baa5;                  /*Hintergrundfarbe für die gesamte Seite*/
+    font-family: 'StrawberryMuffins', Arial, Helvetica, sans-serif;     /*Schriftart für die gesamte Seite*/
+    margin: 40px;                               /*Abstand zwischen Inhalt und Rand der Seite*/
+    padding: 20px;                       
+    line-height: 1.6;              
+    color:#3b2a1b;                          /*Textfarbe für die gesamte Seite*/ 
+    transition: background-color 0.3s ease, color 0.3s ease;
+} 
+/* Dark Mode */ 
+body.dark-mode {
+    background-color: #2a2a2a;
+    color: #e0d8c8;
+}
+
+body.dark-mode .navbar {
+    background-color: #3a5a47;
+}
+body.dark-mode .logo {
+    color: #a0c8b0;
+}
+
+body.dark-mode .nav-links a {
+    color: #c8d8c0;
+}
+
+body.dark-mode .hero {
+    background: linear-gradient(#3a5a47, #3a3828);
+}
+
+body.dark-mode h1 {
+    background: #c8d8c0;
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+
+body.dark-mode h2 {
+    color: #c8d8c0;
+}
+
+body.dark-mode h3 {
+    color: #c8d8c0;
+}
+
+body.dark-mode p {
+    color: #e0d8c8;
+}
+
+/* Dark Mode für die Story-Liste */
+body.dark-mode .story-list {
+    background-color: rgba(58, 56, 40, 0.18);
+    padding: 1rem 1rem 1rem 1.25rem;
+    border-radius: 14px;
+}
+
+body.dark-mode .story-list li {
+    color: #e0d8c8;
+}
+
+body.dark-mode .story-list li::before {
+    color: #a0c8b0;
+}
+
+body.dark-mode .story-list li strong {
+    color: #c8d8c0;
+}
+
+body.dark-mode .tips-section {
+    border-top-color: #6e9573;
+}
+
+body.dark-mode .fibel-tricks-list li {
+    color: #e0d8c8;
+}
+
+body.dark-mode .fibel-tricks-list li::marker,
+body.dark-mode .fibel-tricks-list li::before {
+    color: #a0c8b0;
+}
+
+body.dark-mode .fibel-section h3 {
+    color: #c8d8c0;
+}
+
+body.dark-mode input,
+body.dark-mode textarea {
+    background-color: #3a3828;
+    border-color: #3a5a47;
+    color: #e0d8c8;
+}
+
+body.dark-mode .mein-button {
+    background-color: #3a5a47;
+    color: #e0d8c8;
+}
+
+body.dark-mode .rezept-karte {
+    background-color: #3a3828;
+    border-color: #3a5a47;
+    color: #e0d8c8;
+}
+
+body.dark-mode .wecker-liste li {
+    border-bottom-color: #3a5a47;
+}
+
+/* Dark Mode Erweiterungen */
+body.dark-mode .dashboard-karte {
+  background-color: #3a3828;
+  border-color: #3a5a47;
+  color: #e0d8c8;
+}
+body.dark-mode .dashboard-karte-gruen {
+  background-color: #2e4a30;
+  border-color: #4caf50;
+}
+body.dark-mode .dashboard-zahl { color: #a0c8b0; }
+body.dark-mode .task-item {
+  background-color: #3a3828;
+  border-color: #3a5a47;
+}
+body.dark-mode .task-erledigt { background-color: #2a2a2a; }
+body.dark-mode .task-title { color: #e0d8c8; }
+body.dark-mode .task-select {
+  background-color: #3a3828;
+  border-color: #3a5a47;
+  color: #e0d8c8;
+}
+body.dark-mode .progress-bar-container { background-color: #444; }
+
+body.dark-mode .footer {
+    color: #a08080;
+}
+
+
+
+/* DESIGN SCHRIFT */
+h1 {
+    background: #504d40; 
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;                  /*Textfarbe für Überschrift 1*/
+    font-size: 3.5rem;                   /*Schriftgröße für Überschrift 1*/
+    margin-bottom: 1rem;                 /*Abstand unter Überschrift 1*/
+}
+h2 {
+    color: #39582b;                      
+    font-size: 3rem;                      
+    margin-bottom: 30px; 
+}
+
+p {
+    font-size: 1.75rem;
+    line-height: 2.2rem;
+    color: #1a1919
+}
+label {
+    font-size: 1.75rem; /* Größe nach Wunsch anpassen */
+}
+
+/*DESIGN NAVBAR */
+.navbar {
+    display: flex;                      
+    justify-content: space-between;     /* Logo Links Logo Rechts */
+    align-items: center;                /* Vertikal zentriert */
+    padding: 1rem 2rem;
+    background-color: #699a7b;
+}
+/* Logo */
+.logo {
+    font-size: 2.25rem;
+    font-weight: bold;
+    color: #c7c4c4;
+}
+.nav-links{
+    display: flex;                  /* Auch die Links als Flexbox */
+    gap: 30px;                      /* Abstand zwischen Links */
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.nav-links a{
+    color: #091d0a;
+    text-decoration: none;
+    transition: color 0.2s ease;
+    font-size: 1.0rem;
+}
+.nav-links a:hover {
+    color: #97703a;                       /*Textfarbe bei Hover-Effekt*/
+    text-decoration: underline;             /*Unterstreichung bei Hover-Effekt*/
+    transition: color 0.3s ease;             /*Sanfter Übergang der Textfarbe bei Hover-Effekt*/
+    cursor: grab;
+}
+.nav-links a:focus {
+   outline: 4px solid #068f5f;          /*Fokusrahmen für Links*/
+   outline-offset: 4px;                  /*Abstand zwischen Fokusrahmen und Link*/
+}
+
+/* DESIGN HERO*/
+.hero {
+    min-height: 70vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(#699a7b, #686352);
+    filter:drop-shadow(20px 20px 20px rgba(0, 0, 0, 0.5))
+}
+.hero-content {
+    max-width: 700px;
+    padding: 2rem;
+    text-align: center;
+} 
+
+#Beschreibung {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    color: #3b2a1bb6;
+}
+
+
+
+/* DESIGN Vom Beet auf den Teller - id ueber mich- */
+.story-list {
+    list-style: none; /* Entfernt die Standard-Punkte */
+    padding-left: 10px; 
+    margin: 20px 0; 
+}
+
+/* Styling für jeden einzelnen Listenpunkt */
+.story-list li {
+    font-size: 1.2rem;
+    line-height: 1.6; 
+    margin-bottom: 18px; 
+    position: relative; 
+    padding-left: 30px; 
+    color: #333333; 
+}
+
+/* Das kreative Icon vor dem Text -bulletpoint-  */
+.story-list li::before {
+    content: "🪏"; 
+    position: absolute;
+    left: 0;
+    top: 2px; 
+    font-size: 1.3rem; 
+}
+
+.story-list li strong {
+    color: #2c5e3b; /* dunkles Kräutergrün */
+}
+
+
+
+/*Eingabe feld*/
+input, textarea {
+    background-color: #ede4b9;              /*Hintergrundfarbe */
+    border: 1px solid #79a98c;              /*Rahmen */
+    padding: 5px;                               /*Innenabstand */
+    font-size: 1rem;                             /*Schriftgröße */
+    color: #000000;                            /*Textfarbe f*/
+    transition: border-color 0.3s ease;         /*Sanfter Übergang der Rahmenfarbe bei Fokus*/
+}
+input:focus, textarea:focus {
+    border-color: #043f0f;              /*Rahmenfarbe bei Fokus für Eingabefelder*/
+    outline: none;                      /*Keine zusätzliche Umrandung bei Fokus*/
+}
+.mein-button {
+    background-color: #6e9573; /* Hintergrundfarbe */
+    color: #585140;            /* Textfarbe */
+    border: none;              /* Rahmen entfernen */
+    padding: 12px 24px;        /* Innenabstand (oben/unten, links/rechts) */
+    border-radius: 6px;        /* Abgerundete Ecken */
+    font-size: 16px;           /* Schriftgröße */
+    font-weight: bold;         /* Schriftstärke */
+    cursor: pointer;           /* Mauszeiger wird zur Hand */
+    transition: all 0.3s ease; /* Weicher Übergang für Animationen */
+}
+.mein-button:hover {
+    background-color:#4e7553;
+    color: #e0d8c8;
+}
+
+.rezept-karte {
+    background-color: #ede4b9;
+    border: 1px solid #79a98c;
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    text-align: center;
+}
+
+.rezept-karte:hover {
+    transform: scale(1.02);
+}
+
+.rezept-karte img {
+    width: 50%;
+    border-radius: 6px;
+}
+
+.loeschen-button {
+    background-color: transparent;
+    border: 1px solid #a03030;
+    color: #a03030;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 2px 8px;
+}
+
+.loeschen-button:hover {
+    background-color: #a03030;
+    color: #e0d8c8;
+}
+
+
+/*DESIGN FIEBEL */
+
+/* Container für die Verhältnisse-Box */
+.ratio-box {
+    background-color: #e0cdb1; 
+    border-left: 4px solid #d37237; /*strich neben der box links */
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 4px;
+}
+
+.ratio-box ul {
+    list-style-type: "⚖️ "; 
+    padding-left: 20px;
+    margin: 0;
+}
+
+.ratio-box li {
+    margin-bottom: 12px;
+    line-height: 1.5;
+    color: #333;
+}
+
+.ratio-box li em {
+    color: #666;
+    font-size: 1.1rem;
+}
+
+/* Styling für Omas Geheimtipps */
+.tips-section {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 2px dashed #2c5e3b; /* Trennlinie */
+}
+
+.fibel-tricks-list {
+    list-style-type: "✨ "; /* bulletpoints aus funkelnden sternen */
+    padding-left: 20px;
+    margin-top: 15px;
+    font-size: 1.1rem;
+}
+/*li fiebel*/
+.fibel-tricks-list li {
+    margin-bottom: 15px;
+    line-height: 1.6;
+    color: #333333;
+}
+
+.fibel-section h3 {
+    color: #2c5e3b; /* Kräutergrün */
+    margin-bottom: 10px;
+}
+
+/*DESIGN VORRATSKAMMER/WECKER */
+.wecker-liste {
+    list-style: none;
+    padding: 0;
+}
+
+.wecker-produkte li {
+    list-style-type: "✨ "; /* bulletpoints aus funkelnden sternen */
+    padding-left: 20px;
+    margin-top: 15px;
+    font-size: 1.1rem;
+}
+.wecker-produkte li strong {
+    color: #2c5e3b; /* dunkles Kräutergrün */
+}
+.wecker-produkte li {
+    font-size: 1rem;
+}
+.wecker-liste li {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #3b2a1bb6;
+    gap: 16px;
+}
+
+.wecker-liste li span:first-child {
+    text-transform: capitalize;
+}
+
+.wecker-meldung {
+    padding: 12px;
+    border-radius: 6px;
+    margin: 12px 0;
+    font-size: 1.1rem;
+}
+
+.wecker-fertig {
+    background-color: #c8e6c9;
+    color: #2e7d32;
+}
+
+.wecker-warten {
+    background-color: #fff3e0;
+    color: #e65100;
+}
+
+
+.footer {
+    font-size: 0.8rem;
+    line-height: 1.9;
+    color: #621f1f
+}
+@media (max-width: 768px) {
+    body {
+        margin: 10px;
+        padding: 10px;
+    }
+
+    .navbar {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .nav-links {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+
+    .wecker-liste li {
+        grid-template-columns: 1fr;
+    }
+}
+/* ===========================
+   TASK MANAGER ERWEITERUNGEN
+   =========================== */
+
+#aufgaben {
+  padding: 32px 0;
+  border-top: 2px dashed #79a98c;
+  margin-top: 32px;
+}
+
+/* Dashboard */
+#dashboard {
+  margin: 20px 0;
+}
+
+.dashboard-karten {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.dashboard-karte {
+  flex: 1 1 120px;
+  background-color: #ede4b9;
+  border: 1px solid #79a98c;
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dashboard-karte-gruen {
+  background-color: #c8e6c9;
+  border-color: #4caf50;
+}
+
+.dashboard-zahl {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #39582b;
+}
+
+.dashboard-label {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.progress-bar-container {
+  background-color: #ddd;
+  border-radius: 8px;
+  height: 12px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #699a7b, #39582b);
+  border-radius: 8px;
+  transition: width 0.5s ease;
+}
+
+.progress-label {
+  font-size: 0.9rem;
+  color: #555;
+  margin: 0;
+}
+
+/* TaskForm */
+.task-form-wrapper {
+  margin: 20px 0;
+}
+
+.task-form-zeile {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.task-form-zeile input {
+  flex: 2 1 220px;
+}
+
+.task-select {
+  flex: 1 1 160px;
+  padding: 5px 8px;
+  background-color: #ede4b9;
+  border: 1px solid #79a98c;
+  border-radius: 4px;
+  font-size: 1rem;
+  color: #3b2a1b;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.task-select:focus {
+  border-color: #043f0f;
+  outline: none;
+}
+
+/* TaskList */
+.task-list-wrapper {
+  margin-top: 16px;
+}
+
+.mein-button.active {
+  background-color: #39582b;
+  color: #e0d8c8;
+}
+
+/* TaskItem */
+.task-liste {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.task-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background-color: #ede4b9;
+  border: 1px solid #79a98c;
+  border-radius: 8px;
+  transition: transform 0.2s ease;
+}
+
+.task-item:hover {
+  transform: translateX(2px);
+}
+
+.task-erledigt {
+  opacity: 0.55;
+  background-color: #ddd;
+}
+
+.task-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #39582b;
+}
+
+.task-title {
+  font-size: 1.1rem;
+  color: #3b2a1b;
+  word-break: break-word;
+}
+
+.task-badge {
+  font-size: 0.78rem;
+  padding: 3px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+  text-transform: capitalize;
+}
+
+.task-priority { background-color: #f0e6c8; }
+.task-kategorie { background-color: #d0e8d8; }
+
+
+/* Responsive */
+@media (max-width: 768px) {
+  .task-item {
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 8px;
+  }
+  .task-form-zeile { flex-direction: column; }
+  .task-form-zeile input,
+  .task-select { width: 100%; }
+}
