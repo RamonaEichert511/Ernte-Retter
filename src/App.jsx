@@ -7,6 +7,7 @@ import Favouriten from "./components/Favouriten";
 import EinmachFibel from "./components/EinmachFibel";
 import Vorratskammer from "./components/Vorratskammer";
 import Footer from "./components/Footer";
+import Marktplatz from "./components/Marktplatz";
 // NEU: Task Manager Komponenten
 import Dashboard from "./components/Dashboard";
 import TaskForm from "./components/TaskForm";
