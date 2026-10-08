@@ -1,3 +1,6 @@
+![Ernte Retter – CookieCrew](images/ernte-retter-banner.png)
+
+
 # Ernte Retter 
 
 Der Ernte Retter soll ein Anlauf punkt sein, wenn man nicht mehr weiß wann man mit seiner Obst und Gemüse ernte aus dem eigenen Garten machen soll
