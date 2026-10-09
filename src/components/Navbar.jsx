@@ -9,6 +9,7 @@ function Navbar({ darkMode, toggleDarkMode }) {
           <li><a href="#favouriten">❤️ Meine Favouriten</a></li>
           <li><a href="#info">📚 Einmach-Fibel</a></li>
           <li><a href="#wecker">🫙 Meine Vorratskammer</a></li>
+          <li><a href="#marktplatz">🥕 Ernte teilen</a></li>
           <li><a href="#aufgaben">✅ Meine Aufgaben</a></li>
         </ul>
         <button className="mein-button" onClick={toggleDarkMode}>
