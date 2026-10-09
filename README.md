@@ -44,3 +44,14 @@ Projektvorstellung: 21. Oktober 2026
 ######  Ramona: 
   - Markplatz gebaut
   - Dokumentation
+
+#### *9.Oktober*
+######  Bendix:
+  -  habe die AWS EC2-Instanz eingerichtet, habe die Docker-Laufzeitumgebung installiert und das manuelle Deployment auf dem Server getestet.
+
+######  Lee:
+  - Habe mit den Main.py code angefangen 
+
+######  Ramona:
+  - Dokumentation
+  - umbau des Frontend 
