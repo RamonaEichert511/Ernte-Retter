@@ -12,7 +12,18 @@ def get_connection():
 
 def init_db():
     conn = get_connection()
-    # TODO: CREATE TABLE IF NOT EXISTS offers (...)
-    # columns: id, title, description, status, created_at
-    conn.commit()
-    conn.close()
+    try:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS offers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                description TEXT NOT NULL DEFAULT '',
+                status TEXT NOT NULL DEFAULT 'verfügbar',
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        conn.commit()
+    finally:
+        conn.close()
