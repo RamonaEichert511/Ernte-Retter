@@ -2,7 +2,7 @@ function UeberMich() {
   return (
     <section id="ueber-mich">
       <div className="story-container">
-        <h2>🌱 Vom Beet auf den Teller: Meine Geschichte</h2>
+        <h2>Vom Beet auf den Teller</h2>
         <p>
           <strong>Hallo! Schön, dass du da bist.</strong> Wer selbst gärtnert, backt und kocht, kennt diesen einen Moment: Plötzlich ist der Korb voll mit erntefrischen Tomaten,
           Zucchini oder Beeren – und die Küche versinkt im kreativen Chaos. Genau aus diesem Moment heraus ist dieser Ernte Retter entstanden. Ich wollte Schluss machen mit der Zettelwirtschaft

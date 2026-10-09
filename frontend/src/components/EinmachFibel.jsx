@@ -2,7 +2,7 @@ function EinmachFibel() {
   return (
     <section id="info">
       <div className="fibel-section info-section">
-        <h2>📚 Einmach-Fibel</h2>
+        <h2>Einmach-Fibel</h2>
         <p>
           Beim Einkochen und Fermentieren gibt es eine goldene Regel: Die Verhältnisse müssen stimmen.
           Zu wenig Zucker in der Marmelade und sie schimmelt; zu wenig Salz beim Fermentieren und das Gemüse wird matschig. Hier sind die wichtigsten Faustformeln auf einen Blick:

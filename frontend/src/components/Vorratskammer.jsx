@@ -88,7 +88,7 @@ function Vorratskammer() {
 
   return (
     <section id="wecker">
-      <h2>🫙 Meine Vorratskammer</h2>
+      <h2>Meine Vorratskammer</h2>
       <p>
         Hier findest du eine Übersicht deiner eingelegten Vorräte und wie lange sie noch
         brauchen bis sie perfekt schmecken.
