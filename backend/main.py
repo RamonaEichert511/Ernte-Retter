@@ -4,7 +4,7 @@ from creation.schemas import Offer, OfferCreate
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
  
-from database import init_db, get_all_offers, create_offer, reserve_offer
+from database import init_db, get_all_offers, create_offer, reserve_offer, get_connection
 
 
 @asynccontextmanager
@@ -15,7 +15,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Ernte Retter API", lifespan=lifespan)
 
-origins = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+  origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
