@@ -15,7 +15,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Ernte Retter API", lifespan=lifespan)
 
-  origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")]
+origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
