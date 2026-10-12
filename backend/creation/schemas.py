@@ -1,9 +1,11 @@
+from datetime import datetime
+
 from pydantic import BaseModel, Field
 
 
 class OfferCreate(BaseModel):
     title: str = Field(min_length=1, max_length=100)
-    description: str = Field(default="", max_length=1000)
+    description: str | None = Field(default=None, max_length=500)
 
 
 class Offer(BaseModel):
@@ -11,4 +13,4 @@ class Offer(BaseModel):
     title: str
     description: str | None
     status: str
-    created_at: str
+    created_at: datetime
