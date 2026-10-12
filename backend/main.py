@@ -1,10 +1,11 @@
 import os
 from contextlib import asynccontextmanager
-from creation.schemas import Offer, OfferCreate 
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
- 
-from database import init_db, get_all_offers, create_offer, reserve_offer, get_connection
+
+from creation.schemas import Offer, OfferCreate
+from database import init_db, get_connection
 
 
 @asynccontextmanager
@@ -15,7 +16,10 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Ernte Retter API", lifespan=lifespan)
 
-origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")]
+origins = [
+    o.strip()
+    for o in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -28,14 +32,13 @@ app.add_middleware(
 def list_offers():
     conn = get_connection()
     try:
-        rows = conn.execute(
+        cur = conn.execute(
             "SELECT id, title, description, status, created_at "
             "FROM offers ORDER BY id DESC"
-        ).fetchall()
-        return [dict(row) for row in rows]
+        )
+        return cur.fetchall()
     finally:
         conn.close()
-    
 
 
 @app.post("/offers", response_model=Offer, status_code=201)
@@ -43,16 +46,13 @@ def create_offer(offer: OfferCreate):
     conn = get_connection()
     try:
         cur = conn.execute(
-            "INSERT INTO offers (title, description) VALUES (?, ?)",
+            "INSERT INTO offers (title, description) VALUES (%s, %s) "
+            "RETURNING id, title, description, status, created_at",
             (offer.title, offer.description),
         )
+        row = cur.fetchone()
         conn.commit()
-        row = conn.execute(
-            "SELECT id, title, description, status, created_at "
-            "FROM offers WHERE id = ?",
-            (cur.lastrowid,),
-        ).fetchone()
-        return dict(row)
+        return row
     finally:
         conn.close()
 
@@ -61,23 +61,25 @@ def create_offer(offer: OfferCreate):
 def reserve_offer(offer_id: int):
     conn = get_connection()
     try:
+        # Only succeeds if the offer exists AND is still available
         cur = conn.execute(
             "UPDATE offers SET status = 'reserviert' "
-            "WHERE id = ? AND status = 'verfügbar'",
+            "WHERE id = %s AND status = 'verfügbar' "
+            "RETURNING id, title, description, status, created_at",
             (offer_id,),
         )
+        row = cur.fetchone()
         conn.commit()
 
-        row = conn.execute(
-            "SELECT id, title, description, status, created_at "
-            "FROM offers WHERE id = ?",
-            (offer_id,),
-        ).fetchone()
+        if row is not None:
+            return row
 
-        if row is None:
+        # Nothing was updated: either the id does not exist or it was already reserved
+        exists = conn.execute(
+            "SELECT 1 FROM offers WHERE id = %s", (offer_id,)
+        ).fetchone()
+        if exists is None:
             raise HTTPException(status_code=404, detail="Offer not found")
-        if cur.rowcount == 0:
-            raise HTTPException(status_code=409, detail="Offer already reserved")
-        return dict(row)
+        raise HTTPException(status_code=409, detail="Offer already reserved")
     finally:
         conn.close()
