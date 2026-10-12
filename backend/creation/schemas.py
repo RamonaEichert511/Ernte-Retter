@@ -9,6 +9,6 @@ class OfferCreate(BaseModel):
 class Offer(BaseModel):
     id: int
     title: str
-    description: str
+    description: str | None
     status: str
     created_at: str

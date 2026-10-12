@@ -1,11 +1,10 @@
 import os
 from contextlib import asynccontextmanager
-
+from creation.schemas import Offer, OfferCreate 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-
-from database import get_connection, init_db
-from creation.schemas import Offer, OfferCreate
+ 
+from database import init_db, get_all_offers, create_offer, reserve_offer
 
 
 @asynccontextmanager
