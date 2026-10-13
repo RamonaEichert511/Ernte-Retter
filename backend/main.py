@@ -41,7 +41,7 @@ app.add_middleware(
 
 
 @app.post(
-    "/auth/register", response_model=UserPublic, status_code=status.HTTP_201_CREATED
+    "/register", response_model=UserPublic, status_code=status.HTTP_201_CREATED
 )
 def register(user: UserCreate):
     with db() as conn:
