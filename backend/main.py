@@ -14,7 +14,7 @@ from auth import (
     verify_password,
 )
 from database import db, init_db
-from schemas import Offer, OfferCreate, Token, UserCreate, UserPublic
+from creation.schemas import Offer, OfferCreate, Token, UserCreate, UserPublic
 
 
 @asynccontextmanager
