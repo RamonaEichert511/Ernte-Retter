@@ -32,7 +32,7 @@ class LoginRequest(BaseModel):
 
 class UserPublic(BaseModel):
     id: int
-    name: str
+    name: Optional[str] = None
     email: EmailStr
 
 class Token(BaseModel):

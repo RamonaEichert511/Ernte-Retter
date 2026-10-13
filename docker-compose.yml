@@ -1,10 +1,24 @@
-
-
 services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ernteretter_passwort_123
+      POSTGRES_DB: ernteretter
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
   backend:
     build: ./backend
+    env_file:
+      - .env
     ports:
       - "8000:8000"
+    depends_on:
+      - db
     restart: always
 
   frontend:
@@ -14,3 +28,6 @@ services:
     depends_on:
       - backend
     restart: always
+
+volumes:
+  postgres_data:

@@ -1,6 +1,3 @@
-@app.on_event("startup")
-def on_startup():
-    init_db()
 import os
 from contextlib import asynccontextmanager
 from typing import List
@@ -27,6 +24,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Ernte-Retter API", lifespan=lifespan)
 
+@app.on_event("startup")
+def on_startup():
+    init_db()
 origins = [
     o.strip()
     for o in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
@@ -85,9 +85,8 @@ def login(data: OAuth2PasswordRequestForm = Depends()):
         "token_type": "bearer",
     }
 
-@app.get("/api/me")
-@app.get("/auth/me", response_model=UserPublic)
-def me(current_user: dict = Depends(get_current_user)):
+@app.get("/me", response_model=UserPublic)
+def get_me(current_user: UserPublic = Depends(get_current_user)):
     return current_user
 
 
