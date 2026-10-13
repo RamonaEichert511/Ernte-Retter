@@ -30,7 +30,7 @@ export default function Marktplatz({ market }) {
         <>
           <div className="market-account">
             <span>
-              Angemeldet als <strong>{market.user.name}</strong>
+              Angemeldet als <strong>{market.user.username}</strong>
             </span>
             <a href="#konto">Mein Konto</a>
           </div>
