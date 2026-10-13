@@ -47,8 +47,8 @@ def register(user: UserCreate):
     with db() as conn:
         try:
             row = conn.execute(
-                "INSERT INTO users (username, email, password_hash) "
-                "VALUES (%s, %s, %s) RETURNING id, username, email",
+                "INSERT INTO users (name, email, password_hash) "
+                "VALUES (%s, %s, %s) RETURNING id, name, email",
                 (user.username.strip(), user.email.lower(), hash_password(user.password)),
             ).fetchone()
         except psycopg.errors.UniqueViolation:

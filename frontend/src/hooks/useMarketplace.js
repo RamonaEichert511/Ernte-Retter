@@ -94,7 +94,7 @@ async function authenticate(mode, values) {
   setError("");
 
   const credentials = {
-    username: values.username.trim(),
+    email: values.email.trim(),
     password: values.password,
   };
 
@@ -103,8 +103,7 @@ async function authenticate(mode, values) {
       await api("/register", {
           method: "POST",
           body: JSON.stringify({
-            username: credentials.username,
-            email: values.email.trim(),
+            email: credentials.email || credentials.username,
             password: credentials.password,
           }),
       });
