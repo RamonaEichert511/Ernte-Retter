@@ -1,7 +1,7 @@
 import os
 from contextlib import asynccontextmanager
 from typing import List
-
+from fastapi.security import OAuth2PasswordRequestForm
 import psycopg.errors
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -59,20 +59,28 @@ def register(user: UserCreate):
         return row
 
 
-@app.post("/auth/login", response_model=Token)
-def login(data: LoginRequest):
+@app.post("/login", response_model=Token)
+def login(data: OAuth2PasswordRequestForm = Depends()):
     with db() as conn:
         row = conn.execute(
-            "SELECT id, password_hash FROM users WHERE LOWER(email) = LOWER(%s)",
-            (data.email,),
+            "SELECT id, password_hash FROM users WHERE username = %s",
+            (data.username,),
         ).fetchone()
-    if row is None or not verify_password(data.password, row["password_hash"]):
+
+    if row is None or not verify_password(
+        data.password,
+        row["password_hash"],
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
+            detail="Benutzername oder Passwort ist falsch",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    return {"access_token": create_access_token(row["id"]), "token_type": "bearer"}
+
+    return {
+        "access_token": create_access_token(row["id"]),
+        "token_type": "bearer",
+    }
 
 
 @app.get("/auth/me", response_model=UserPublic)
