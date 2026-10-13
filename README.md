@@ -55,3 +55,18 @@ Projektvorstellung: 21. Oktober 2026
 ######  Ramona:
   - Dokumentation
   - umbau des Frontend 
+
+#### *12.Oktober*
+######  Bendix:
+  - CloudFront eingerichtet
+  - Domain auf AWS zertifiziert und bei CloudFront bereitgestellt
+
+
+######  Lee:
+  - Database und FAST API integrated. Database struktur gestartet.
+
+######  Ramona:
+  - Domain gekauft "ernteretter.de" 
+  - Rezepte rausgesucht zum Füttern der Datenbank. 
+  - Domain mit Bendix eingerichtet. Einstellungen vorgenommen für AWS Zertifizierung. 
+  - Dokumentation auf den neuesten stand gebracht.
