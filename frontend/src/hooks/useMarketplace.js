@@ -94,26 +94,34 @@ async function authenticate(mode, values) {
   setError("");
 
   const credentials = {
-    email: values.email.trim(),
+    username: values.username.trim(),
+    email: (values.email || "").trim(),
     password: values.password,
   };
 
   try {
     if (mode === "register") {
       await api("/register", {
-          method: "POST",
-          body: JSON.stringify({
-            email: credentials.email || credentials.username,
-            password: credentials.password,
-          }),
+        method: "POST",
+        body: JSON.stringify({
+          email: credentials.email || credentials.username,
+          password: credentials.password,
+        }),
       });
     }
-    
 
-    const result = await api("/login", {
-      method: "POST",
-      body: new URLSearchParams(credentials),
-    });
+const params = new URLSearchParams();
+
+params.append("username", credentials.email || credentials.username);
+params.append("password", credentials.password);
+
+const result = await api("/login", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/x-www-form-urlencoded",
+  },
+  body: params,
+});
 
     if (!result.access_token) {
       throw new Error("Die Anmeldung hat keinen Token zurückgegeben.");
@@ -129,6 +137,7 @@ async function authenticate(mode, values) {
     setBusy(false);
   }
 }
+
 function logout() {
   clearToken();
   setUser(null);
