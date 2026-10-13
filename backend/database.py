@@ -26,16 +26,17 @@ def init_db():
             """
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
-                username TEXT NOT NULL,
+                name TEXT NOT NULL,
+                email TEXT NOT NULL,
                 password_hash TEXT NOT NULL,
                 created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
             )
             """
         )
-        # usernames are unique regardless of upper/lower case
+        # one account per email, regardless of upper/lower case
         conn.execute(
-            "CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower_idx "
-            "ON users (LOWER(username))"
+            "CREATE UNIQUE INDEX IF NOT EXISTS users_email_lower_idx "
+            "ON users (LOWER(email))"
         )
         conn.execute(
             """

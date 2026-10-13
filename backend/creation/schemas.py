@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 
 
 class OfferCreate(BaseModel):
@@ -20,13 +20,20 @@ class Offer(BaseModel):
 
 
 class UserCreate(BaseModel):
-    username: str = Field(min_length=3, max_length=30)
+    name: str = Field(min_length=1, max_length=100)
+    email: EmailStr
     password: str = Field(min_length=8, max_length=128)
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(max_length=128)
 
 
 class UserPublic(BaseModel):
     id: int
-    username: str
+    name: str
+    email: str
 
 
 class Token(BaseModel):
