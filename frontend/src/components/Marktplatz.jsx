@@ -96,12 +96,6 @@ export default function Marktplatz({ market }) {
               "Die Ernte ist für dich reserviert. Über den Kontakt kannst du die Abholung vereinbaren.",
             )
           }
-          onCancel={(id) =>
-            action(
-              () => market.cancel(id),
-              "Deine Reservierung wurde zurückgezogen. Die Ernte ist wieder verfügbar.",
-            )
-          }
           onDelete={(id) =>
             action(() => market.remove(id), "Dein Inserat wurde gelöscht.")
           }

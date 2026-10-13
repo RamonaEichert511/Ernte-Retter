@@ -36,7 +36,7 @@ async function submit(e) {
     return (
       <section className="account-panel">
         <span className="eyebrow">DEINE GARTENKÜCHE</span>
-        <h2>Hallo, {market.user.name}.</h2>
+        <h2>Hallo, {market.user.username}.</h2>
         <p>Du bist mit angemeldet.</p>
         <p>
           Deine Inserate und Reservierungen findest du unter „Ernte teilen“.
@@ -64,8 +64,7 @@ async function submit(e) {
           : "Dein Platz in der Gartenküche."}
       </h2>
       <p>
-        Mit deinem Konto kannst du Ernte anbieten, reservieren und deine
-        Reservierung wieder zurückziehen.
+        Mit deinem Konto kannst du Ernte anbieten und reservieren.
       </p>
       <div className="auth-tabs">
         <button

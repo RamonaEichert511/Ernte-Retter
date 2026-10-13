@@ -65,7 +65,6 @@ export default function Home({ onSearch, market }) {
                   user={market.user}
                   busy={market.busy}
                   onReserve={market.reserve}
-                  onCancel={market.cancel}
                   onDelete={market.remove}
                 />
               ))}

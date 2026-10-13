@@ -182,8 +182,6 @@ function logout() {
     create: (values) =>
       perform("/offers", { method: "POST", body: JSON.stringify(values) }),
     reserve: (id) => perform(`/offers/${id}/reserve`, { method: "PUT" }),
-    cancel: (id) =>
-      perform(`/offers/${id}/cancel-reservation`, { method: "PUT" }),
     remove: (id) => perform(`/offers/${id}`, { method: "DELETE" }),
   };
 }
