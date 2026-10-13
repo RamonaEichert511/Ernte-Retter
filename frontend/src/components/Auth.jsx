@@ -3,7 +3,7 @@ import Icon from "./Icon";
 
 export default function Auth({ market }) {
   const [mode, setMode] = useState("login");
-  const [form, setForm] = useState({ username: "", password: ""});
+  const [form, setForm] = useState({ username: "",email: "",password: ""});
   const [error, setError] = useState("");
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -16,6 +16,7 @@ async function submit(e) {
 
     setForm({
       username: "",
+      email: "",
       password: "",
     });
 
@@ -103,6 +104,21 @@ async function submit(e) {
             autoComplete="username"
           />
         </label>
+        {mode === "register" && (
+          <label htmlFor="account-email">
+            E-Mail-Adresse
+            <input
+              id="account-email"
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={change}
+              required
+              maxLength={254}
+              autoComplete="email"
+            />
+          </label>
+        )}
 
         <label htmlFor="account-password">
           Passwort

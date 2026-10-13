@@ -101,10 +101,15 @@ async function authenticate(mode, values) {
   try {
     if (mode === "register") {
       await api("/register", {
-        method: "POST",
-        body: JSON.stringify(credentials),
+          method: "POST",
+          body: JSON.stringify({
+            username: credentials.username,
+            email: values.email.trim(),
+            password: credentials.password,
+          }),
       });
     }
+    
 
     const result = await api("/login", {
       method: "POST",
