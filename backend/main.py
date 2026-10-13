@@ -119,6 +119,28 @@ def reserve_offer(offer_id: int, current_user: dict = Depends(get_current_user))
         raise HTTPException(status_code=409, detail="Offer is already reserved")
 
 
+@app.delete("/offers/{offer_id}/reserve", response_model=Offer)
+def withdraw_reservation(
+    offer_id: int, current_user: dict = Depends(get_current_user)
+):
+    with db() as conn:
+        row = conn.execute(
+            "UPDATE offers SET status = 'verfügbar', reserved_by = NULL "
+            "WHERE id = %s AND reserved_by = %s RETURNING *",
+            (offer_id, current_user["id"]),
+        ).fetchone()
+        if row is not None:
+            return row
+        exists = conn.execute(
+            "SELECT 1 FROM offers WHERE id = %s", (offer_id,)
+        ).fetchone()
+        if exists is None:
+            raise HTTPException(status_code=404, detail="Offer not found")
+        raise HTTPException(
+            status_code=403, detail="You have not reserved this offer"
+        )
+
+
 @app.delete("/offers/{offer_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_offer(offer_id: int, current_user: dict = Depends(get_current_user)):
     with db() as conn:
