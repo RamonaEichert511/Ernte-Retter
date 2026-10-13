@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Ernte-Retter API", lifespan=lifespan)
+app = FastAPI(title="Ernte-Retter API", lifespan=lifespan, root_path="/api")
 
 origins = [
     o.strip()
