@@ -123,7 +123,7 @@ export default function Auth({ market }) {
             value={form.password}
             onChange={change}
             required
-            minLength={mode === "register" ? 10 : 1}
+            minLength={mode === "register" ? 8 : 1}
             maxLength={128}
             autoComplete={
               mode === "register" ? "new-password" : "current-password"
@@ -131,7 +131,7 @@ export default function Auth({ market }) {
           />
         </label>
         {mode === "register" && (
-          <p className="form-hint">Mindestens 10 Zeichen.</p>
+          <p className="form-hint">Mindestens 8 Zeichen.</p>
         )}
         {error && (
           <p role="alert" className="form-error">
