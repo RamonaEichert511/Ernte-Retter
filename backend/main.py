@@ -82,7 +82,7 @@ def login(data: OAuth2PasswordRequestForm = Depends()):
         "token_type": "bearer",
     }
 
-
+@app.get("/api/me")
 @app.get("/auth/me", response_model=UserPublic)
 def me(current_user: dict = Depends(get_current_user)):
     return current_user
