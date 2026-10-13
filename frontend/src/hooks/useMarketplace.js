@@ -101,15 +101,19 @@ async function authenticate(mode, values) {
 
   try {
     if (mode === "register") {
+      const emailValue = credentials.email || credentials.username;
       await api("/register", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
-          email: credentials.email || credentials.username,
+          name: credentials.name || credentials.username || emailValue.split("@")[0],
+          email: emailValue,
           password: credentials.password,
         }),
       });
     }
-
 const params = new URLSearchParams();
 
 params.append("username", credentials.email || credentials.username);

@@ -49,7 +49,7 @@ def register(user: UserCreate):
             row = conn.execute(
                 "INSERT INTO users (name, email, password_hash) "
                 "VALUES (%s, %s, %s) RETURNING id, name, email",
-                (user.username.strip(), user.email.lower(), hash_password(user.password)),
+                (user.name.strip(), user.email.lower(), hash_password(user.password)),
             ).fetchone()
         except psycopg.errors.UniqueViolation:
             raise HTTPException(
