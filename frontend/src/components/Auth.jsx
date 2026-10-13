@@ -3,36 +3,41 @@ import Icon from "./Icon";
 
 export default function Auth({ market }) {
   const [mode, setMode] = useState("login");
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [form, setForm] = useState({ username: "", password: ""});
   const [error, setError] = useState("");
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-  async function submit(e) {
-    e.preventDefault();
-    setError("");
-    try {
-      await market.authenticate(
-        mode,
-        mode === "register"
-          ? form
-          : { email: form.email, password: form.password },
-      );
-      setForm({ name: "", email: "", password: "" });
-      window.location.hash = "marktplatz";
-    } catch (e) {
-      setError(
-        e.status
+
+async function submit(e) {
+  e.preventDefault();
+  setError("");
+
+  try {
+    await market.authenticate(mode, form);
+
+    setForm({
+      username: "",
+      password: "",
+    });
+
+    window.location.hash = "marktplatz";
+  } catch (e) {
+    setError(
+      e.status === 401
+        ? "Benutzername oder Passwort ist falsch."
+        : e.status
           ? e.message
-          : "Die Anmeldung ist gerade nicht erreichbar. Bitte versuche es später erneut.",
-      );
-    }
+          : "Die Anmeldung konnte nicht abgeschlossen werden. Bitte versuche es erneut.",
+    );
   }
+}
+
   if (market.loading) return <p role="status">Dein Konto wird geladen …</p>;
   if (market.user)
     return (
       <section className="account-panel">
         <span className="eyebrow">DEINE GARTENKÜCHE</span>
-        <h2>Hallo, {market.user.name}.</h2>
-        <p>Du bist mit {market.user.email} angemeldet.</p>
+        <h2>Hallo, {market.user.username}.</h2>
+        <p>Du bist mit angemeldet.</p>
         <p>
           Deine Inserate und Reservierungen findest du unter „Ernte teilen“.
         </p>
@@ -59,8 +64,7 @@ export default function Auth({ market }) {
           : "Dein Platz in der Gartenküche."}
       </h2>
       <p>
-        Mit deinem Konto kannst du Ernte anbieten, reservieren und deine
-        Reservierung wieder zurückziehen.
+        Mit deinem Konto kannst du Ernte anbieten und reservieren.
       </p>
       <div className="auth-tabs">
         <button
@@ -87,33 +91,19 @@ export default function Auth({ market }) {
         </button>
       </div>
       <form className="auth-form" onSubmit={submit}>
-        {mode === "register" && (
-          <label htmlFor="account-name">
-            Dein Name
-            <input
-              id="account-name"
-              name="name"
-              value={form.name}
-              onChange={change}
-              required
-              maxLength={60}
-              autoComplete="name"
-            />
-          </label>
-        )}
-        <label htmlFor="account-email">
-          E-Mail-Adresse
+        <label htmlFor="account-username">
+          Benutzername
           <input
-            id="account-email"
-            type="email"
-            name="email"
-            value={form.email}
+            id="account-username"
+            type="text"
+            name="username"
+            value={form.username}
             onChange={change}
             required
-            maxLength={254}
-            autoComplete="email"
+            autoComplete="username"
           />
         </label>
+
         <label htmlFor="account-password">
           Passwort
           <input
@@ -123,7 +113,7 @@ export default function Auth({ market }) {
             value={form.password}
             onChange={change}
             required
-            minLength={mode === "register" ? 10 : 1}
+            minLength={mode === "register" ? 8 : 1}
             maxLength={128}
             autoComplete={
               mode === "register" ? "new-password" : "current-password"
@@ -131,7 +121,7 @@ export default function Auth({ market }) {
           />
         </label>
         {mode === "register" && (
-          <p className="form-hint">Mindestens 10 Zeichen.</p>
+          <p className="form-hint">Mindestens 8 Zeichen.</p>
         )}
         {error && (
           <p role="alert" className="form-error">

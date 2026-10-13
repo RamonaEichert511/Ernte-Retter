@@ -30,7 +30,7 @@ export default function Marktplatz({ market }) {
         <>
           <div className="market-account">
             <span>
-              Angemeldet als <strong>{market.user.name}</strong>
+              Angemeldet als <strong>{market.user.username}</strong>
             </span>
             <a href="#konto">Mein Konto</a>
           </div>
@@ -94,12 +94,6 @@ export default function Marktplatz({ market }) {
             action(
               () => market.reserve(id),
               "Die Ernte ist für dich reserviert. Über den Kontakt kannst du die Abholung vereinbaren.",
-            )
-          }
-          onCancel={(id) =>
-            action(
-              () => market.cancel(id),
-              "Deine Reservierung wurde zurückgezogen. Die Ernte ist wieder verfügbar.",
             )
           }
           onDelete={(id) =>

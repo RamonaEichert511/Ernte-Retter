@@ -1,5 +1,10 @@
 import { useState, useEffect } from "react";
-import { api } from "../services/api";
+import {
+  api,
+  getToken,
+  saveToken,
+  clearToken,
+} from "../services/api";
 
 export default function useMarketplace() {
   const [user, setUser] = useState(null);
@@ -7,90 +12,164 @@ export default function useMarketplace() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-
-  async function refreshOffers() {
-    const next = await api("/offers");
-    setOffers(next);
+  
+  function normalizeOffers(list) {
+    return list.map((offer) => ({
+      ...offer,
+      status:
+        offer.status === "reserviert"
+          ? "reserved"
+          : offer.status === "verfügbar"
+            ? "available"
+            : offer.status,
+    }));
   }
-  useEffect(() => {
-    let active = true;
-    async function load() {
-      try {
-        let signedIn = null;
-        try {
-          signedIn = await api("/auth/me");
-        } catch (e) {
-          if (e.status !== 401) throw e;
-        }
-        const available = await api("/offers");
-        if (active) {
-          setUser(signedIn);
-          setOffers(available);
-        }
-      } catch {
-        if (active)
-          setError(
-            "Der Marktplatz ist gerade nicht erreichbar. Läuft das Backend?",
-          );
-      } finally {
-        if (active) setLoading(false);
-      }
-    }
-    load();
-    return () => {
-      active = false;
-    };
-  }, []);
 
-  async function authenticate(mode, values) {
-    setBusy(true);
-    setError("");
-    try {
-      const signedIn = await api(`/auth/${mode}`, {
-        method: "POST",
-        body: JSON.stringify(values),
-      });
-      setUser(signedIn);
-      await refreshOffers();
-      return signedIn;
-    } finally {
-      setBusy(false);
-    }
-  }
-  async function logout() {
-    setBusy(true);
-    setError("");
-    try {
-      await api("/auth/logout", { method: "POST" });
+async function refreshOffers() {
+  const next = await api("/offers");
+  setOffers(normalizeOffers(next));
+}
+useEffect(() => {
+  let active = true;
+
+  function handleUnauthorized() {
+    if (active) {
       setUser(null);
-      setOffers([]);
-      await refreshOffers();
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
+      setError("Bitte melde dich an.");
     }
   }
-  async function perform(path, options) {
-    setBusy(true);
-    setError("");
+
+  window.addEventListener(
+    "ernte-retter:unauthorized",
+    handleUnauthorized,
+  );
+
+  async function load() {
     try {
-      await api(path, options);
-      await refreshOffers();
-      return true;
-    } catch (e) {
-      setError(e.message);
-      if (e.status === 401) setUser(null);
-      try {
-        await refreshOffers();
-      } catch {
-        /* Keep the last known list until retry. */
+      const available = await api("/offers");
+
+      if (active) {
+        setOffers(normalizeOffers(available));
       }
-      return false;
-    } finally {
-      setBusy(false);
+    } catch {
+      if (active) {
+        setError(
+          "Der Marktplatz ist gerade nicht erreichbar. Läuft das Backend?",
+        );
+      }
+    }
+
+    if (active && getToken()) {
+      try {
+        const me = await api("/me");
+
+        if (active) {
+          setUser(me);
+        }
+      } catch (e) {
+        if (active && e.status !== 401) {
+          setError("Dein Konto konnte nicht geladen werden.");
+        }
+      }
+    }
+
+    if (active) {
+      setLoading(false);
     }
   }
+
+  load();
+
+  return () => {
+    active = false;
+    window.removeEventListener(
+      "ernte-retter:unauthorized",
+      handleUnauthorized,
+    );
+  };
+}, []);
+
+async function authenticate(mode, values) {
+  setBusy(true);
+  setError("");
+
+  const credentials = {
+    username: values.username.trim(),
+    password: values.password,
+  };
+
+  try {
+    if (mode === "register") {
+      await api("/register", {
+        method: "POST",
+        body: JSON.stringify(credentials),
+      });
+    }
+
+    const result = await api("/login", {
+      method: "POST",
+      body: new URLSearchParams(credentials),
+    });
+
+    if (!result.access_token) {
+      throw new Error("Die Anmeldung hat keinen Token zurückgegeben.");
+    }
+
+    saveToken(result.access_token);
+
+    const me = await api("/me");
+    setUser(me);
+
+    return me;
+  } finally {
+    setBusy(false);
+  }
+}
+function logout() {
+  clearToken();
+  setUser(null);
+  setError("");
+  window.location.hash = "konto";
+}
+
+ async function perform(path, options) {
+  const protectedAction = ["POST", "PUT", "DELETE"].includes(
+    options.method?.toUpperCase(),
+  );
+
+  if (protectedAction && !getToken()) {
+    setUser(null);
+    window.location.hash = "konto";
+    return false;
+  }
+
+  setBusy(true);
+  setError("");
+
+  try {
+    await api(path, options);
+  } catch (e) {
+    setError(
+      e.status === 401
+        ? "Bitte melde dich erneut an."
+        : e.message,
+    );
+    return false;
+  } finally {
+    setBusy(false);
+  }
+
+  try {
+    await refreshOffers();
+  } catch {
+    setError(
+      "Die Aktion war erfolgreich, aber die Inserate konnten nicht aktualisiert werden.",
+    );
+  }
+
+  return true;
+}
+
   return {
     user,
     offers,
@@ -103,8 +182,6 @@ export default function useMarketplace() {
     create: (values) =>
       perform("/offers", { method: "POST", body: JSON.stringify(values) }),
     reserve: (id) => perform(`/offers/${id}/reserve`, { method: "PUT" }),
-    cancel: (id) =>
-      perform(`/offers/${id}/cancel-reservation`, { method: "PUT" }),
     remove: (id) => perform(`/offers/${id}`, { method: "DELETE" }),
   };
 }

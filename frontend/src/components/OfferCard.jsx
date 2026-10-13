@@ -3,11 +3,12 @@ export default function OfferCard({
   user,
   busy,
   onReserve,
-  onCancel,
   onDelete,
 }) {
   const reserved = offer.status === "reserved";
-  const own = user?.id === offer.owner_id;
+ const own =
+  user?.id != null &&
+  offer.owner_id === user.id;
   const myReservation = reserved && user?.id === offer.reserved_by;
   return (
     <article className="offer-card">
@@ -55,14 +56,7 @@ export default function OfferCard({
             Inserat löschen
           </button>
         ) : myReservation ? (
-          <button
-            className="secondary-button"
-            type="button"
-            disabled={busy}
-            onClick={() => onCancel(offer.id)}
-          >
-            Reservierung zurückziehen
-          </button>
+           <span className="form-hint">Für dich reserviert</span>
         ) : !reserved ? (
           user ? (
             <button
