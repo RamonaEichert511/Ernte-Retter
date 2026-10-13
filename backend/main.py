@@ -1,3 +1,6 @@
+@app.on_event("startup")
+def on_startup():
+    init_db()
 import os
 from contextlib import asynccontextmanager
 from typing import List
