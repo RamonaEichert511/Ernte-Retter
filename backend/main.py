@@ -13,7 +13,7 @@ from auth import (
     verify_password,
 )
 from database import db, init_db
-from schemas import LoginRequest, Offer, OfferCreate, Token, UserCreate, UserPublic
+from creation.schemas import LoginRequest, Offer, OfferCreate, Token, UserCreate, UserPublic
 
 
 @asynccontextmanager
@@ -47,9 +47,9 @@ def register(user: UserCreate):
     with db() as conn:
         try:
             row = conn.execute(
-                "INSERT INTO users (name, email, password_hash) "
-                "VALUES (%s, %s, %s) RETURNING id, name, email",
-                (user.name.strip(), user.email.lower(), hash_password(user.password)),
+                "INSERT INTO users (username, email, password_hash) "
+                "VALUES (%s, %s, %s) RETURNING id, username, email",
+                (user.username.strip(), user.email.lower(), hash_password(user.password)),
             ).fetchone()
         except psycopg.errors.UniqueViolation:
             raise HTTPException(

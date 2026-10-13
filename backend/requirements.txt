@@ -5,3 +5,4 @@ pwdlib[argon2]
 pyJWT
 python-multipart
 httpx
+email-validator
