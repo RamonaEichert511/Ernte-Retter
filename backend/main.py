@@ -63,7 +63,7 @@ def register(user: UserCreate):
 def login(data: OAuth2PasswordRequestForm = Depends()):
     with db() as conn:
         row = conn.execute(
-            "SELECT id, password_hash FROM users WHERE username = %s",
+            "SELECT id, password_hash FROM users WHERE email = %s",
             (data.username,),
         ).fetchone()
 
