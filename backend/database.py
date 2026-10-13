@@ -1,51 +1,52 @@
 import os
-import time
 
 import psycopg
 from psycopg.rows import dict_row
 
-# In Docker, DATABASE_URL is passed in automatically (host "db").
-# The fallback is for running locally against a Postgres on localhost.
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://ernte_user:ernte_pass@localhost:5432/ernte_db",
-)
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError(
+        "DATABASE_URL is not set, e.g. "
+        "postgresql://ernte_user:ernte_pass@db:5432/ernte_db"
+    )
 
 
-def get_connection():
-    """Open a new connection. Call this once per request and close it afterwards."""
-    return psycopg.connect(DATABASE_URL, row_factory=dict_row)  # rows come back as dicts
+def db():
+    """Open a connection for use in a `with` block.
 
-
-def init_db(retries=10, delay=2):
-    """Create the offers table if it does not exist yet.
-
-    Postgres can take a few seconds to accept connections after the container
-    starts, so we retry a few times before giving up.
+    On success the transaction is committed, on an exception it is rolled
+    back, and the connection is closed either way.
     """
-    for attempt in range(1, retries + 1):
-        try:
-            conn = get_connection()
-            break
-        except psycopg.OperationalError:
-            if attempt == retries:
-                raise
-            print(f"Database not ready (attempt {attempt}/{retries}), retrying...")
-            time.sleep(delay)
+    return psycopg.connect(DATABASE_URL, row_factory=dict_row)
 
-    try:
+
+def init_db():
+    with db() as conn:
         conn.execute(
             """
-            CREATE TABLE IF NOT EXISTS offers (
-                id          SERIAL PRIMARY KEY,
-                title       TEXT NOT NULL,
-                description TEXT,
-                status      TEXT NOT NULL DEFAULT 'verfügbar'
-                            CHECK (status IN ('verfügbar', 'reserviert')),
-                created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                username TEXT NOT NULL,
+                password_hash TEXT NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
             )
             """
         )
-        conn.commit()
-    finally:
-        conn.close()
+        # usernames are unique regardless of upper/lower case
+        conn.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower_idx "
+            "ON users (LOWER(username))"
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS offers (
+                id SERIAL PRIMARY KEY,
+                title TEXT NOT NULL,
+                description TEXT,
+                status TEXT NOT NULL DEFAULT 'verfügbar',
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                owner_id INTEGER NOT NULL REFERENCES users(id),
+                reserved_by INTEGER REFERENCES users(id)
+            )
+            """
+        )
