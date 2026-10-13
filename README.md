@@ -70,3 +70,16 @@ Projektvorstellung: 21. Oktober 2026
   - Rezepte rausgesucht zum Füttern der Datenbank. 
   - Domain mit Bendix eingerichtet. Einstellungen vorgenommen für AWS Zertifizierung. 
   - Dokumentation auf den neuesten stand gebracht.
+
+#### *13.Oktober*
+######  Bendix:
+  - fehlende .env angelegt, die docker-compose.yml um den PostgreSQL-Service sowie die .env-Einbindung erweitert
+  - Bugfixing bis Anmeldung/ Registrierung funktionieren
+
+######  Lee:
+  - Authentication, Token und Login-System eingebaut.
+
+######  Ramona:
+  - Bug fix zwischen frontend und backend  mit Bendix 
+  - LogIn funktioniert jetzt ! 
+  - Dokumentation 
