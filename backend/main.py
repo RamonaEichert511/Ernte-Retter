@@ -5,7 +5,6 @@ from typing import List
 import psycopg.errors
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordRequestForm
 
 from auth import (
     create_access_token,
@@ -14,7 +13,7 @@ from auth import (
     verify_password,
 )
 from database import db, init_db
-from creation.schemas import Offer, OfferCreate, Token, UserCreate, UserPublic
+from schemas import LoginRequest, Offer, OfferCreate, Token, UserCreate, UserPublic
 
 
 @asynccontextmanager
@@ -41,40 +40,42 @@ app.add_middleware(
 # ---------- Auth ----------
 
 
-@app.post("/register", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
+@app.post(
+    "/auth/register", response_model=UserPublic, status_code=status.HTTP_201_CREATED
+)
 def register(user: UserCreate):
     with db() as conn:
         try:
             row = conn.execute(
-                "INSERT INTO users (username, password_hash) "
-                "VALUES (%s, %s) RETURNING id, username",
-                (user.username, hash_password(user.password)),
+                "INSERT INTO users (name, email, password_hash) "
+                "VALUES (%s, %s, %s) RETURNING id, name, email",
+                (user.name.strip(), user.email.lower(), hash_password(user.password)),
             ).fetchone()
         except psycopg.errors.UniqueViolation:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="Username already taken",
+                detail="Email is already registered",
             )
         return row
 
 
-@app.post("/login", response_model=Token)
-def login(form: OAuth2PasswordRequestForm = Depends()):
+@app.post("/auth/login", response_model=Token)
+def login(data: LoginRequest):
     with db() as conn:
         row = conn.execute(
-            "SELECT id, password_hash FROM users WHERE LOWER(username) = LOWER(%s)",
-            (form.username,),
+            "SELECT id, password_hash FROM users WHERE LOWER(email) = LOWER(%s)",
+            (data.email,),
         ).fetchone()
-    if row is None or not verify_password(form.password, row["password_hash"]):
+    if row is None or not verify_password(data.password, row["password_hash"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
+            detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     return {"access_token": create_access_token(row["id"]), "token_type": "bearer"}
 
 
-@app.get("/me", response_model=UserPublic)
+@app.get("/auth/me", response_model=UserPublic)
 def me(current_user: dict = Depends(get_current_user)):
     return current_user
 
