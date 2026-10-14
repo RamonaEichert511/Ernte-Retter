@@ -26,7 +26,7 @@ export default function OfferCard({
       <dl>
         <div>
           <dt>Menge</dt>
-          <dd>{offer.quantity}</dd>
+          <dd>{offer.einheit}</dd>
         </div>
         <div>
           <dt>Abholort</dt>
