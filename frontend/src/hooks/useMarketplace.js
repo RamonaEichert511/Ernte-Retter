@@ -199,6 +199,7 @@ function logout() {
     create: (values) =>
       perform("/offers", { method: "POST", body: JSON.stringify(values) }),
     reserve: (id) => perform(`/offers/${id}/reserve`, { method: "PUT" }),
+    withdraw: (id) => perform(`/offers/${id}/reserve`, { method: "DELETE" }),
     remove: (id) => perform(`/offers/${id}`, { method: "DELETE" }),
   };
 }
