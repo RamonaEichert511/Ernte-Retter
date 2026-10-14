@@ -184,11 +184,10 @@ def withdraw_reservation(
         raise HTTPException(
             status_code=403, detail="You have not reserved this offer"
         )
-
-# -------- aufgaben -----------
-
 @app.delete("/offers/{offer_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_offer(offer_id: int, current_user: dict = Depends(get_current_user)):
+# -------- aufgaben -----------
+
 @app.get("/aufgaben", response_model=list[Aufgabe])
 def list_aufgaben(current_user: dict = Depends(get_current_user)):
     with db() as conn:
