@@ -26,9 +26,9 @@ class Offer(BaseModel):
     owner_id: int
     owner_name: str
     reserved_by: Optional[int] = None
-    menge: int
-    einheit: Einheit
-    location: str
+    menge: Optional[int] = None
+    einheit: Einheit = "Stück"
+    location: Optional[str] = None
 
 
 # ---------- Users and auth ----------
