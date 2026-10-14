@@ -56,7 +56,7 @@ def get_current_user(
 
     with db() as conn:
         row = conn.execute(
-            "SELECT id, username, email FROM users WHERE id = %s", (user_id,)
+            "SELECT id, name, email FROM users WHERE id = %s", (user_id,)
         ).fetchone()
     if row is None:
         raise credentials_error

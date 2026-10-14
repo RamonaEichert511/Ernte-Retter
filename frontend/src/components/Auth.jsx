@@ -38,7 +38,7 @@ async function submit(e) {
       <section className="account-panel">
         <span className="eyebrow">DEINE GARTENKÜCHE</span>
         <h2>Hallo, {market.user.name}.</h2>
-        <p>Du bist mit angemeldet.</p>
+        <p>Du bist angemeldet.</p>
         <p>
           Deine Inserate und Reservierungen findest du unter „Ernte teilen“.
         </p>
