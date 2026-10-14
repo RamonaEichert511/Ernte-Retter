@@ -187,6 +187,8 @@ def withdraw_reservation(
 
 # -------- aufgaben -----------
 
+@app.delete("/offers/{offer_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_offer(offer_id: int, current_user: dict = Depends(get_current_user)):
 @app.get("/aufgaben", response_model=list[Aufgabe])
 def list_aufgaben(current_user: dict = Depends(get_current_user)):
     with db() as conn:
