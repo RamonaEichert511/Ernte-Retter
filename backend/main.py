@@ -185,26 +185,30 @@ def withdraw_reservation(
         )
 
 
-@app.delete("/offers/{offer_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_offer(
-    offer_id: int, current_user: dict = Depends(get_current_user)
+@app.post("/offers", response_model=Offer)
+def create_offer(
+    data: OfferCreate, current_user: dict = Depends(get_current_user)
 ):
+    menge = data.menge if data.menge not in (None, "") else 1
+    einheit = data.einheit or "Stück"
+    location = data.location or ""
     with db() as conn:
-        row = conn.execute(
-            "DELETE FROM offers WHERE id = %s AND owner_id = %s RETURNING id",
-            (offer_id, current_user["id"]),
+        new = conn.execute(
+            "INSERT INTO offers "
+            "(title, description, menge, einheit, location, owner_id) "
+            "VALUES (%s, %s, %s, %s, %s, %s) RETURNING id",
+            (
+                data.title,
+                data.description,
+                menge,
+                einheit,
+                location,
+                current_user["id"],
+            ),
         ).fetchone()
-        if row is not None:
-            return
-        exists = conn.execute(
-            "SELECT 1 FROM offers WHERE id = %s", (offer_id,)
+        return conn.execute(
+            OFFER_SELECT + "WHERE o.id = %s", (new["id"],)
         ).fetchone()
-        if exists is None:
-            raise HTTPException(status_code=404, detail="Offer not found")
-        raise HTTPException(
-            status_code=403, detail="You do not own this offer"
-        )
-
 
 # -------- aufgaben -----------
 
