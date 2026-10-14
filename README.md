@@ -83,3 +83,22 @@ Projektvorstellung: 21. Oktober 2026
   - Bug fix zwischen frontend und backend  mit Bendix 
   - LogIn funktioniert jetzt ! 
   - Dokumentation 
+
+#### *14.Oktober*
+######  Bendix:
+  - Automatischer invalidierungsbefehl auf cloudfront bei GitHub Actions push eingerichtet
+  - Healthcheck für backend in deploy.yml ergänzt
+
+######  Lee:
+  - aufgaben database gebaut, bug fixes
+
+######  Ramona:
+  - Dokumentation 
+  - Fix zwischen Frontend und Backend gesucht 
+  - Fix liste erstellt für Frontend und Backend
+  - Probleme behoben oder funktionen neu eingebaut 
+    - Reservierung zurückgeben button 
+    - Benutzername ändern in Email beim Login
+    - Benutzernamen anzeigen im Inserat 
+    - Benutzernamen anzeigen im  “Mein konto”  
+
