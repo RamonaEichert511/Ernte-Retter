@@ -3,6 +3,7 @@ export default function OfferCard({
   user,
   busy,
   onReserve,
+  onWithdraw,
   onDelete,
 }) {
   const reserved = offer.status === "reserved";
@@ -17,6 +18,11 @@ export default function OfferCard({
       </span>
       {own && <span className="owner-badge">Dein Inserat</span>}
       <h3>{offer.title}</h3>
+      {offer.owner_name && (
+        <p className="form-hint">
+          Inserat ist von <strong>{offer.owner_name}</strong>
+        </p>
+      )}
       <dl>
         <div>
           <dt>Menge</dt>
@@ -56,7 +62,17 @@ export default function OfferCard({
             Inserat löschen
           </button>
         ) : myReservation ? (
+          <>
            <span className="form-hint">Für dich reserviert</span>
+           <button
+             className="secondary-button"
+             type="button"
+             disabled={busy}
+             onClick={() => onWithdraw(offer.id)}
+           >
+             Reservierung aufheben
+           </button>
+          </>
         ) : !reserved ? (
           user ? (
             <button

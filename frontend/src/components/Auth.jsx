@@ -24,7 +24,7 @@ async function submit(e) {
   } catch (e) {
     setError(
       e.status === 401
-        ? "Benutzername oder Passwort ist falsch."
+        ? "E-Mail-Adresse oder Passwort ist falsch."
         : e.status
           ? e.message
           : "Die Anmeldung konnte nicht abgeschlossen werden. Bitte versuche es erneut.",
@@ -37,7 +37,7 @@ async function submit(e) {
     return (
       <section className="account-panel">
         <span className="eyebrow">DEINE GARTENKÜCHE</span>
-        <h2>Hallo, {market.user.username}.</h2>
+        <h2>Hallo, {market.user.name}.</h2>
         <p>Du bist mit angemeldet.</p>
         <p>
           Deine Inserate und Reservierungen findest du unter „Ernte teilen“.
@@ -93,7 +93,7 @@ async function submit(e) {
       </div>
       <form className="auth-form" onSubmit={submit}>
         <label htmlFor="account-username">
-          Benutzername
+          {mode === "login" ? "E-Mail-Adresse" : "Benutzername"}
           <input
             id="account-username"
             type="text"
