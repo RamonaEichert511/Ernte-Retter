@@ -58,7 +58,10 @@ def init_db():
             "ALTER TABLE offers ADD COLUMN IF NOT EXISTS einheit TEXT NOT NULL DEFAULT 'Stück'"
         )
         conn.execute(
-            "ALTER TABLE offers ALTER COLUMN menge TYPE INTEGER"
+            "ALTER TABLE offers ADD COLUMN IF NOT EXISTS menge TYPE INTEGER"
+        )
+        conn.execute(
+            "ALTER TABLE offers ADD COLUMN IF NOT EXISTS location TEXT NOT NULL DEFAULT ''"
         )
         conn.execute(
             """
