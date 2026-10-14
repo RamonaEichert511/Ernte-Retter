@@ -48,7 +48,7 @@ def init_db():
                 created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                 owner_id INTEGER NOT NULL REFERENCES users(id),
                 reserved_by INTEGER REFERENCES users(id),
-                menge NUMERIC(10, 2) NOT NULL DEFAULT 1,
+                menge INTEGER NOT NULL DEFAULT 1,
                 einheit TEXT NOT NULL DEFAULT 'Stück',
                 location TEXT NOT NULL DEFAULT ''
             )
@@ -58,7 +58,7 @@ def init_db():
             "ALTER TABLE offers ADD COLUMN IF NOT EXISTS einheit TEXT NOT NULL DEFAULT 'Stück'"
         )
         conn.execute(
-            "ALTER TABLE offers ALTER COLUMN menge TYPE NUMERIC(10, 2)"
+            "ALTER TABLE offers ALTER COLUMN menge TYPE INTEGER"
         )
         conn.execute(
             """
