@@ -43,11 +43,31 @@ def init_db():
             CREATE TABLE IF NOT EXISTS offers (
                 id SERIAL PRIMARY KEY,
                 title TEXT NOT NULL,
-                description TEXT,
+                description TEXT NULL,
                 status TEXT NOT NULL DEFAULT 'verfügbar',
                 created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                 owner_id INTEGER NOT NULL REFERENCES users(id),
-                reserved_by INTEGER REFERENCES users(id)
+                reserved_by INTEGER REFERENCES users(id),
+                menge INTEGER NOT NULL DEFAULT 1,
+                einheit TEXT NOT NULL DEFAULT 'Stück',
+                location TEXT NOT NULL DEFAULT ''
             )
             """
         )
+        conn.execute(
+            "ALTER TABLE offers ADD COLUMN IF NOT EXISTS einheit TEXT NOT NULL DEFAULT 'Stück'"
+        )
+        conn.execute(
+            "ALTER TABLE offers ALTER COLUMN menge TYPE INTEGER"
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS aufgaben (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                title TEXT NOT NULL,
+                done BOOLEAN NOT NULL DEFAULT FALSE,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )
+            """
+)

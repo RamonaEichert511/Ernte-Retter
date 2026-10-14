@@ -1,12 +1,20 @@
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, EmailStr, Field
 
+Einheit = Literal["kg", "g", "Stück", "Bund", "Liter"]
+
+
+# ---------- Offers ----------
+
 
 class OfferCreate(BaseModel):
-    title: str = Field(min_length=1, max_length=100)
-    description: Optional[str] = Field(default=None, max_length=1000)
+    title: str
+    description: Optional[str] = None
+    menge: int
+    einheit: Einheit
+    location: str
 
 
 class Offer(BaseModel):
@@ -16,7 +24,14 @@ class Offer(BaseModel):
     status: str
     created_at: datetime
     owner_id: int
+    owner_name: str
     reserved_by: Optional[int] = None
+    menge: int
+    einheit: Einheit
+    location: str
+
+
+# ---------- Users and auth ----------
 
 
 class UserCreate(BaseModel):
@@ -35,6 +50,21 @@ class UserPublic(BaseModel):
     name: Optional[str] = None
     email: EmailStr
 
+
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+# ---------- Aufgaben ----------
+
+
+class AufgabeCreate(BaseModel):
+    title: str
+
+
+class Aufgabe(BaseModel):
+    id: int
+    title: str
+    done: bool
+    created_at: datetime
