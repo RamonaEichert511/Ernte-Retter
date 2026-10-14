@@ -23,14 +23,12 @@ from auth import (
     verify_password,
 )
 from database import db, init_db
-from creation.schemas import LoginRequest, Offer, OfferCreate, Token, UserCreate, UserPublic
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
     yield
-
 
 
 app = FastAPI(title="Ernte-Retter API", lifespan=lifespan)
@@ -92,6 +90,7 @@ def login(data: OAuth2PasswordRequestForm = Depends()):
         "access_token": create_access_token(row["id"]),
         "token_type": "bearer",
     }
+
 
 @app.get("/me", response_model=UserPublic)
 def get_me(current_user: UserPublic = Depends(get_current_user)):
@@ -184,9 +183,31 @@ def withdraw_reservation(
         raise HTTPException(
             status_code=403, detail="You have not reserved this offer"
         )
+
+
 @app.delete("/offers/{offer_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_offer(offer_id: int, current_user: dict = Depends(get_current_user)):
+def delete_offer(
+    offer_id: int, current_user: dict = Depends(get_current_user)
+):
+    with db() as conn:
+        row = conn.execute(
+            "DELETE FROM offers WHERE id = %s AND owner_id = %s RETURNING id",
+            (offer_id, current_user["id"]),
+        ).fetchone()
+        if row is not None:
+            return
+        exists = conn.execute(
+            "SELECT 1 FROM offers WHERE id = %s", (offer_id,)
+        ).fetchone()
+        if exists is None:
+            raise HTTPException(status_code=404, detail="Offer not found")
+        raise HTTPException(
+            status_code=403, detail="You do not own this offer"
+        )
+
+
 # -------- aufgaben -----------
+
 
 @app.get("/aufgaben", response_model=list[Aufgabe])
 def list_aufgaben(current_user: dict = Depends(get_current_user)):
