@@ -18,6 +18,11 @@ export default function OfferCard({
       </span>
       {own && <span className="owner-badge">Dein Inserat</span>}
       <h3>{offer.title}</h3>
+      {offer.owner_name && (
+        <p className="form-hint">
+          Inserat ist von <strong>{offer.owner_name}</strong>
+        </p>
+      )}
       <dl>
         <div>
           <dt>Menge</dt>
