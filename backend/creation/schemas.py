@@ -12,7 +12,7 @@ Einheit = Literal["kg", "g", "Stück", "Bund", "Liter"]
 class OfferCreate(BaseModel):
     title: str
     description: Optional[str] = None
-    menge: float = Field(gt=0)
+    menge: int
     einheit: Einheit
     location: str
 
@@ -26,7 +26,7 @@ class Offer(BaseModel):
     owner_id: int
     owner_name: str
     reserved_by: Optional[int] = None
-    menge: float
+    menge: int
     einheit: Einheit
     location: str
 
