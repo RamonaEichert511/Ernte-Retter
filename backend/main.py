@@ -1,14 +1,15 @@
 import os
 from contextlib import asynccontextmanager
-from typing import List
-from fastapi.security import OAuth2PasswordRequestForm
+from decimal import Decimal, InvalidOperation
+
 import psycopg.errors
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordRequestForm
+
 from creation.schemas import (
     Aufgabe,
     AufgabeCreate,
-    LoginRequest,
     Offer,
     OfferCreate,
     Token,
@@ -106,6 +107,23 @@ OFFER_SELECT = (
 )
 
 
+def parse_menge(value) -> Decimal:
+    """Leere Menge wird zu 1, sonst muss es eine positive Zahl sein."""
+    if value is None or str(value).strip() == "":
+        return Decimal(1)
+    try:
+        menge = Decimal(str(value).strip().replace(",", "."))
+    except InvalidOperation:
+        raise HTTPException(
+            status_code=422, detail="Menge muss eine Zahl sein"
+        )
+    if not menge.is_finite() or menge <= 0:
+        raise HTTPException(
+            status_code=422, detail="Menge muss größer als 0 sein"
+        )
+    return menge
+
+
 @app.get("/offers", response_model=list[Offer])
 def list_offers():
     with db() as conn:
@@ -118,6 +136,9 @@ def list_offers():
 def create_offer(
     data: OfferCreate, current_user: dict = Depends(get_current_user)
 ):
+    menge = parse_menge(data.menge)
+    einheit = data.einheit or "Stück"
+    location = data.location or ""
     with db() as conn:
         new = conn.execute(
             "INSERT INTO offers "
@@ -126,15 +147,36 @@ def create_offer(
             (
                 data.title,
                 data.description,
-                data.menge,
-                data.einheit,
-                data.location,
+                menge,
+                einheit,
+                location,
                 current_user["id"],
             ),
         ).fetchone()
         return conn.execute(
             OFFER_SELECT + "WHERE o.id = %s", (new["id"],)
         ).fetchone()
+
+
+@app.delete("/offers/{offer_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_offer(
+    offer_id: int, current_user: dict = Depends(get_current_user)
+):
+    with db() as conn:
+        row = conn.execute(
+            "DELETE FROM offers WHERE id = %s AND owner_id = %s RETURNING id",
+            (offer_id, current_user["id"]),
+        ).fetchone()
+        if row is not None:
+            return
+        exists = conn.execute(
+            "SELECT 1 FROM offers WHERE id = %s", (offer_id,)
+        ).fetchone()
+        if exists is None:
+            raise HTTPException(status_code=404, detail="Offer not found")
+        raise HTTPException(
+            status_code=403, detail="You do not own this offer"
+        )
 
 
 @app.put("/offers/{offer_id}/reserve", response_model=Offer)
@@ -185,32 +227,7 @@ def withdraw_reservation(
         )
 
 
-@app.post("/offers", response_model=Offer)
-def create_offer(
-    data: OfferCreate, current_user: dict = Depends(get_current_user)
-):
-    menge = data.menge if data.menge not in (None, "") else 1
-    einheit = data.einheit or "Stück"
-    location = data.location or ""
-    with db() as conn:
-        new = conn.execute(
-            "INSERT INTO offers "
-            "(title, description, menge, einheit, location, owner_id) "
-            "VALUES (%s, %s, %s, %s, %s, %s) RETURNING id",
-            (
-                data.title,
-                data.description,
-                menge,
-                einheit,
-                location,
-                current_user["id"],
-            ),
-        ).fetchone()
-        return conn.execute(
-            OFFER_SELECT + "WHERE o.id = %s", (new["id"],)
-        ).fetchone()
-
-# -------- aufgaben -----------
+# ---------- Aufgaben ----------
 
 
 @app.get("/aufgaben", response_model=list[Aufgabe])
@@ -233,7 +250,7 @@ def create_aufgabe(
         ).fetchone()
 
 
-@app.delete("/aufgaben/{aufgabe_id}", status_code=204)
+@app.delete("/aufgaben/{aufgabe_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_aufgabe(
     aufgabe_id: int, current_user: dict = Depends(get_current_user)
 ):
