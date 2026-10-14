@@ -26,7 +26,6 @@ jobs:
             git pull origin main
             docker compose down
             docker compose up -d --build
-
       - name: AWS-Anmeldung per OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
