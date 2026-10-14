@@ -12,9 +12,9 @@ Einheit = Literal["kg", "g", "Stück", "Bund", "Liter"]
 class OfferCreate(BaseModel):
     title: str
     description: Optional[str] = None
-    menge: Optional[int] = None
+    menge: int = Field(default=1, gt=0)
     einheit: Einheit = "Stück"
-    location: Optional[str] = None
+    location: str
 
 
 class Offer(BaseModel):
@@ -26,9 +26,9 @@ class Offer(BaseModel):
     owner_id: int
     owner_name: str
     reserved_by: Optional[int] = None
-    menge: Optional[int] = None
+    menge: int = Field(default=1, gt=0)
     einheit: Einheit = "Stück"
-    location: Optional[str] = None
+    location: str
 
 
 # ---------- Users and auth ----------
