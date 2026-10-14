@@ -3,7 +3,7 @@ import Icon from "./Icon";
 
 export default function Auth({ market }) {
   const [mode, setMode] = useState("login");
-  const [form, setForm] = useState({ name: "",email: "",password: ""});
+  const [form, setForm] = useState({ username: "",email: "",password: ""});
   const [error, setError] = useState("");
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -15,7 +15,7 @@ async function submit(e) {
     await market.authenticate(mode, form);
 
     setForm({
-      name: "",
+      username: "",
       email: "",
       password: "",
     });
@@ -92,16 +92,16 @@ async function submit(e) {
         </button>
       </div>
       <form className="auth-form" onSubmit={submit}>
-        <label htmlFor="account-name">
-          {mode === "login" ? "E-Mail-Adresse" : "Name"}
+        <label htmlFor="account-username">
+          {mode === "login" ? "E-Mail-Adresse" : "Benutzername"}
           <input
-            id="account-name"
+            id="account-username"
             type="text"
-            name="name"
-            value={form.name}
+            name="username"
+            value={form.username}
             onChange={change}
             required
-            autoComplete="name"
+            autoComplete="username"
           />
         </label>
         {mode === "register" && (

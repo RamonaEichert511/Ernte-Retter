@@ -94,21 +94,21 @@ async function authenticate(mode, values) {
   setError("");
 
   const credentials = {
-    name: values.name.trim(),
+    username: values.username.trim(),
     email: (values.email || "").trim(),
     password: values.password,
   };
 
   try {
     if (mode === "register") {
-      const emailValue = credentials.email || credentials.name;
+      const emailValue = credentials.email || credentials.username;
       await api("/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name: credentials.name || credentials.name || emailValue.split("@")[0],
+          name: credentials.name || credentials.username || emailValue.split("@")[0],
           email: emailValue,
           password: credentials.password,
         }),
@@ -116,7 +116,7 @@ async function authenticate(mode, values) {
     }
 const params = new URLSearchParams();
 
-params.append("name", credentials.email || credentials.name);
+params.append("username", credentials.email || credentials.username);
 params.append("password", credentials.password);
 
 const result = await api("/login", {
