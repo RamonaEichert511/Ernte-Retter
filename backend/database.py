@@ -54,11 +54,18 @@ def init_db():
             )
             """
         )
+        # for databases where the offers table already existed
         conn.execute(
-            "ALTER TABLE offers ADD COLUMN IF NOT EXISTS einheit TEXT NOT NULL DEFAULT 'Stück'"
+            "ALTER TABLE offers ADD COLUMN IF NOT EXISTS menge "
+            "INTEGER NOT NULL DEFAULT 1"
         )
         conn.execute(
-            "ALTER TABLE offers ALTER COLUMN menge TYPE INTEGER"
+            "ALTER TABLE offers ADD COLUMN IF NOT EXISTS einheit "
+            "TEXT NOT NULL DEFAULT 'Stück'"
+        )
+        conn.execute(
+            "ALTER TABLE offers ADD COLUMN IF NOT EXISTS location "
+            "TEXT NOT NULL DEFAULT ''"
         )
         conn.execute(
             """
@@ -70,4 +77,4 @@ def init_db():
                 created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
             )
             """
-)
+        )
