@@ -19,6 +19,8 @@ export async function api(path, options = {}) {
 
   const protectedRequest =
     path === "/me" ||
+    path === "/aufgaben" ||
+    path.startsWith("/aufgaben/") ||
     (path === "/offers" &&
       options.method?.toUpperCase() === "POST") ||
     /^\/offers\/[^/]+(?:\/reserve)?$/.test(path);

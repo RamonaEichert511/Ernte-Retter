@@ -1,5 +1,6 @@
 
 import { useState, useMemo, useEffect } from "react";
+import { api } from "./services/api";
 import Navbar from "./components/Navbar";
 import Home from "./components/Home";
 import Auth from "./components/Auth";
@@ -58,24 +59,57 @@ function App() {
   }
 
   // NEU: Tasks dauerhaft per Custom Hook speichern (Bonus-Aufgabe)
-  const [tasks, setTasks] = useLocalStorage("tasks", []);
+  const [tasks, setTasks] = useState([]);
   const [filter, setFilter] = useState("alle");
+  useEffect(() => {
+  let cancelled = false;
+
+  setTasks([]);
+
+  if (!market.user) return;
+
+  async function loadTasks() {
+    try {
+      const data = await api("/aufgaben");
+
+      if (!cancelled) {
+        setTasks(data);
+      }
+    } catch (error) {
+      if (!cancelled) {
+        console.error("Aufgaben konnten nicht geladen werden:", error);
+      }
+    }
+  }
+
+  loadTasks();
+
+  return () => {
+    cancelled = true;
+  };
+}, [market.user?.id]);
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
   };
 
   // Schritt 4: Task hinzufügen
-  const addTask = (title, priority = "mittel", kategorie = "allgemein") => {
-    const newTask = {
-      id: Date.now(),
-      title,
-      done: false,
-      priority,
-      kategorie,
-    };
-    setTasks([...tasks, newTask]);
+  const addTask = async (title) => {
+    if (!market.user) {
+      alert("Bitte melde dich an, um Aufgaben zu erstellen.");
+      return;
+    }
+    try {
+      const newTask = await api("/aufgaben", {
+        method: "POST",
+        body: JSON.stringify({ title }),
+      });
+      setTasks((previousTasks) => [...previousTasks, newTask]);
+    } catch (error) {
+      alert ('Fehler beim Erstellen der Aufgabe: ${error.message}');
+    }
   };
+    
 
   // Schritt 7: Task-Status umschalten
   const toggleTask = (id) => {
@@ -87,8 +121,17 @@ function App() {
   };
 
   // Schritt 7: Task löschen
-  const deleteTask = (id) => {
-    setTasks(tasks.filter((task) => task.id !== id));
+  const deleteTask = async (id) => {
+    try {
+      await api(`/aufgaben/${id}`, { 
+        method: "DELETE" 
+      });
+      setTasks((previousTasks) =>
+        previousTasks.filter((task) => task.id !== id)
+      );
+    } catch (error) {
+      alert(`Fehler beim Löschen der Aufgabe: ${error.message}`);
+    }
   };
 
   // Bonus: gefilterte Liste per useMemo
