@@ -8,6 +8,32 @@
 .market-form {
   margin: 24px 0;
 }
+.market-form .offer-quantity-group {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 110px);
+  gap: 12px;
+}
+
+.market-form .offer-quantity-group > label {
+  min-width: 0;
+}
+
+.market-form .offer-quantity-group input,
+.market-form .offer-quantity-group select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 48px;
+}
+
+.market-form .offer-quantity-group select {
+  padding: 0 12px;
+  border: 1px solid #dedbcb;
+  border-radius: 8px;
+  background: #fffef9;
+  color: inherit;
+  font: inherit;
+}
 .market-fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
