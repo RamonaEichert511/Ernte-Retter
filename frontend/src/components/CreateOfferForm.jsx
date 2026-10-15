@@ -1,9 +1,10 @@
+
 import { useState } from "react";
 
 const emptyForm = {
   title: "",
   menge: "",
-  einheit: "",
+  einheit: "kg",
   location: "",
   description: "",
 };
@@ -22,7 +23,6 @@ export default function CreateOfferForm({ onCreate, disabled }) {
     if (
       !values.title ||
       !values.menge ||
-      !values.einheit ||
       !values.location
     ) {
       setError(
@@ -30,6 +30,12 @@ export default function CreateOfferForm({ onCreate, disabled }) {
       );
       return;
     }
+    if (Number(values.menge) <= 0) {
+      setError("Bitte gib eine Menge größer als 0 ein.");
+      return;
+    }
+
+
     const success = await onCreate(values);
     if (!success) return;
     setForm(emptyForm);
@@ -52,17 +58,37 @@ export default function CreateOfferForm({ onCreate, disabled }) {
           />
         </label>
         <label htmlFor="offer-quantity">
-          Menge *
-          <input
-            id="offer-quantity"
-            name="menge"
-            value={form.menge}
+            Menge *
+            <input
+              id="offer-quantity"
+              name="menge"
+              type="number"
+              min="0"
+              step="any"
+              value={form.menge}
+              onChange={handleChange}
+              placeholder="z. B. 3"
+              required
+            />
+         </label>
+
+          <label htmlFor="offer-unit">
+            Einheit *
+            <select
+            id="offer-unit"
+            name="einheit"
+            value={form.einheit}
             onChange={handleChange}
-            placeholder="z. B. 3 kg"
-            maxLength={60}
             required
-          />
+          >
+            <option value="kg">kg</option>
+            <option value="g">g</option>
+            <option value="Stück">Stück</option>
+            <option value="Bund">Bund</option>
+            <option value="Liter">Liter</option>
+          </select>
         </label>
+
         <label htmlFor="offer-location">
           Abholort *
           <input
