@@ -21,6 +21,10 @@ export async function api(path, options = {}) {
     path === "/me" ||
     path === "/aufgaben" ||
     path.startsWith("/aufgaben/") ||
+    path === "/wecker" ||
+    path.startsWith("/wecker/") ||
+    path === "/favoriten" ||
+    path.startsWith("/favoriten/") ||
     (path === "/offers" &&
       options.method?.toUpperCase() === "POST") ||
     /^\/offers\/[^/]+(?:\/reserve)?$/.test(path);
