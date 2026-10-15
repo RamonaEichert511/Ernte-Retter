@@ -28,6 +28,25 @@ jobs:
           pip install pytest httpx
           pytest
 
+      - name: Node.js einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Frontend bauen / auf Fehler prüfen
+        run: |
+          if [ -d "frontend" ]; then
+            cd frontend
+            npm ci
+            npm run build
+          else
+            echo "Kein separater Frontend-Ordner gefunden, prüfe Root..."
+            if [ -f "package.json" ]; then
+              npm ci
+              npm run build
+            fi
+          fi
+
       - name: Deploy via SSH auf AWS EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
