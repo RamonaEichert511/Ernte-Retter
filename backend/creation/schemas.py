@@ -71,15 +71,11 @@ class Aufgabe(BaseModel):
 
 class FavoritCreate(BaseModel):
     recipe_id: int
-    title: str
-    image: Optional[str] = None
 
 
 class Favorit(BaseModel):
     id: int
     recipe_id: int
-    title: str
-    image: Optional[str] = None
     created_at: datetime
 
 

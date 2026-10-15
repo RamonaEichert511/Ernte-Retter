@@ -87,12 +87,16 @@ def init_db():
                 id SERIAL PRIMARY KEY,
                 user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                 recipe_id INTEGER NOT NULL,
-                title TEXT NOT NULL,
-                image TEXT,
                 created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                 UNIQUE (user_id, recipe_id)
             )
             """
+        )
+        conn.execute(
+            "ALTER TABLE favoriten DROP COLUMN IF EXISTS title"
+        )
+        conn.execute(
+            "ALTER TABLE favoriten DROP COLUMN IF EXISTS image"
         )
         conn.execute(
             """

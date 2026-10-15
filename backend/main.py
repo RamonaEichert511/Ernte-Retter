@@ -284,12 +284,10 @@ def add_favorit(
 ):
     with db() as conn:
         return conn.execute(
-            "INSERT INTO favoriten (user_id, recipe_id, title, image) "
-            "VALUES (%s, %s, %s, %s) "
+            "INSERT INTO favoriten (user_id, recipe_id) VALUES (%s, %s) "
             "ON CONFLICT (user_id, recipe_id) "
-            "DO UPDATE SET title = EXCLUDED.title, image = EXCLUDED.image "
-            "RETURNING *",
-            (current_user["id"], data.recipe_id, data.title, data.image),
+            "DO UPDATE SET recipe_id = EXCLUDED.recipe_id RETURNING *",
+            (current_user["id"], data.recipe_id),
         ).fetchone()
 
 
