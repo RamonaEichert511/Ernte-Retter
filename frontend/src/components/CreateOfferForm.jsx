@@ -2,7 +2,8 @@ import { useState } from "react";
 
 const emptyForm = {
   title: "",
-  quantity: "",
+  menge: "",
+  einheit: "",
   location: "",
   description: "",
 };
@@ -20,7 +21,8 @@ export default function CreateOfferForm({ onCreate, disabled }) {
     );
     if (
       !values.title ||
-      !values.quantity ||
+      !values.menge ||
+      !values.einheit ||
       !values.location
     ) {
       setError(
@@ -53,8 +55,8 @@ export default function CreateOfferForm({ onCreate, disabled }) {
           Menge *
           <input
             id="offer-quantity"
-            name="quantity"
-            value={form.quantity}
+            name="menge"
+            value={form.menge}
             onChange={handleChange}
             placeholder="z. B. 3 kg"
             maxLength={60}

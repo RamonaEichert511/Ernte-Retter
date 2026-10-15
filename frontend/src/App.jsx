@@ -106,7 +106,7 @@ function App() {
       });
       setTasks((previousTasks) => [...previousTasks, newTask]);
     } catch (error) {
-      alert ('Fehler beim Erstellen der Aufgabe: ${error.message}');
+      alert (`Fehler beim Erstellen der Aufgabe: ${error.message}`);
     }
   };
     
