@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Literal, Optional
 
 from pydantic import BaseModel, EmailStr, Field
@@ -67,4 +67,31 @@ class Aufgabe(BaseModel):
     id: int
     title: str
     done: bool
+    created_at: datetime
+
+class FavoritCreate(BaseModel):
+    recipe_id: int
+    title: str
+    image: Optional[str] = None
+
+
+class Favorit(BaseModel):
+    id: int
+    recipe_id: int
+    title: str
+    image: Optional[str] = None
+    created_at: datetime
+
+
+class WeckerCreate(BaseModel):
+    produkt: str
+    einlegedatum: date
+    fertig_am: datetime
+
+
+class Wecker(BaseModel):
+    id: int
+    produkt: str
+    einlegedatum: date
+    fertig_am: datetime
     created_at: datetime

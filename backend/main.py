@@ -15,6 +15,10 @@ from creation.schemas import (
     Token,
     UserCreate,
     UserPublic,
+    Favorit, 
+    FavoritCreate, 
+    Wecker, 
+    WeckerCreate, 
 )
 
 from auth import (
@@ -261,3 +265,81 @@ def delete_aufgabe(
         ).fetchone()
         if row is None:
             raise HTTPException(status_code=404, detail="Aufgabe not found")
+
+# -------- favoriten -----------
+
+
+@app.get("/favoriten", response_model=list[Favorit])
+def list_favoriten(current_user: dict = Depends(get_current_user)):
+    with db() as conn:
+        return conn.execute(
+            "SELECT * FROM favoriten WHERE user_id = %s ORDER BY created_at",
+            (current_user["id"],),
+        ).fetchall()
+
+
+@app.post("/favoriten", response_model=Favorit)
+def add_favorit(
+    data: FavoritCreate, current_user: dict = Depends(get_current_user)
+):
+    with db() as conn:
+        return conn.execute(
+            "INSERT INTO favoriten (user_id, recipe_id, title, image) "
+            "VALUES (%s, %s, %s, %s) "
+            "ON CONFLICT (user_id, recipe_id) "
+            "DO UPDATE SET title = EXCLUDED.title, image = EXCLUDED.image "
+            "RETURNING *",
+            (current_user["id"], data.recipe_id, data.title, data.image),
+        ).fetchone()
+
+
+@app.delete("/favoriten/{recipe_id}", status_code=204)
+def remove_favorit(
+    recipe_id: str, current_user: dict = Depends(get_current_user)
+):
+    with db() as conn:
+        row = conn.execute(
+            "DELETE FROM favoriten WHERE recipe_id = %s AND user_id = %s "
+            "RETURNING id",
+            (recipe_id, current_user["id"]),
+        ).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="Favorit not found")
+
+
+# -------- wecker (Vorratskammer) -----------
+
+
+@app.get("/wecker", response_model=list[Wecker])
+def list_wecker(current_user: dict = Depends(get_current_user)):
+    with db() as conn:
+        return conn.execute(
+            "SELECT * FROM wecker WHERE user_id = %s ORDER BY fertig_am",
+            (current_user["id"],),
+        ).fetchall()
+
+
+@app.post("/wecker", response_model=Wecker)
+def create_wecker(
+    data: WeckerCreate, current_user: dict = Depends(get_current_user)
+):
+    with db() as conn:
+        return conn.execute(
+            "INSERT INTO wecker (user_id, produkt, einlegedatum, fertig_am) "
+            "VALUES (%s, %s, %s, %s) RETURNING *",
+            (current_user["id"], data.produkt, data.einlegedatum, data.fertig_am),
+        ).fetchone()
+
+
+
+@app.delete("/wecker/{wecker_id}", status_code=204)
+def delete_wecker(
+    wecker_id: int, current_user: dict = Depends(get_current_user)
+):
+    with db() as conn:
+        row = conn.execute(
+            "DELETE FROM wecker WHERE id = %s AND user_id = %s RETURNING id",
+            (wecker_id, current_user["id"]),
+        ).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="Wecker not found")
