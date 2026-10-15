@@ -3,7 +3,6 @@ import { useState } from "react";
 const emptyForm = {
   title: "",
   menge: "",
-  einheit: "",
   location: "",
   description: "",
 };
@@ -22,7 +21,6 @@ export default function CreateOfferForm({ onCreate, disabled }) {
     if (
       !values.title ||
       !values.menge ||
-      !values.einheit ||
       !values.location
     ) {
       setError(
