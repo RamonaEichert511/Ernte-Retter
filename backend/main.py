@@ -315,6 +315,7 @@ def create_rezept(
             (
                 current_user["id"],
                 data.title,
+                data.info,
                 data.beschreibung,
                 data.zutaten,
                 data.schritte,

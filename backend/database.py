@@ -105,6 +105,7 @@ def init_db():
                 id SERIAL PRIMARY KEY,
                 owner_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
                 title TEXT NOT NULL,
+                info TEXT NOT NULL,
                 beschreibung TEXT,
                 zutaten TEXT[] NOT NULL DEFAULT '{}',
                 schritte TEXT[] NOT NULL DEFAULT '{}',

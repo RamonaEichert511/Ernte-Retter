@@ -85,6 +85,7 @@ class Aufgabe(BaseModel):
 
 class RezeptCreate(BaseModel):
     title: str = Field(min_length=1)
+    info: str = Field(min_length=1)
     beschreibung: Optional[str] = None
     zutaten: list[str] = []
     schritte: list[str] = []
@@ -94,6 +95,7 @@ class RezeptCreate(BaseModel):
 
 class Rezept(BaseModel):
     id: int
+    info: str = Field(min_length=1)
     owner_id: Optional[int] = None
     owner_name: Optional[str] = None
     title: str
