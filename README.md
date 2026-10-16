@@ -120,3 +120,21 @@ Projektvorstellung: 21. Oktober 2026
   - Dropdown-Menüs für Menge und Einheit im Inserat hinzugefügt.
   - Spoonacular-API entfernt. Künftig werden eigene, eingepflegte Rezepte abgerufen; diese Funktion wird noch ausgebaut.
   - Footer angepasst und die Verlinkung zu „Über mich“ entfernt
+
+#### *16.Oktober*
+######  Bendix:
+  - build-check für frontend in deploy.yml nachgerüstet
+  - email-benachrichtigungs-service via AWS SES eingerichtet, entsprechende secrets für GitHub ergänzt, deploy.yml und docker-compose.
+  - yml dafür angepasst
+
+######  Lee:
+  - Email system in backend gebaut
+
+######  Ramona:
+  - rezepte raus gesucht
+  - einmach Fibel inhalt rausgesucht 
+  - Fix ‘function {searchFromHero}’ wieder hinzugefügt 
+  - Rezept dateien im Frontend angepasst, das Rezepte ordentlich angezeigt werden. 
+  - Email link im frontend einbauen 
+  - email link bugfix 
+  - Dark mode fehler im Inserat 
