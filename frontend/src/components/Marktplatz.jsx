@@ -18,15 +18,21 @@ const linkedOffer = linkedOfferId
   : null;
 
 useEffect(() => {
-  if (
-    !market.loading &&
-    linkedOffer &&
-    dialogRef.current &&
-    !dialogRef.current.open
-  ) {
-    dialogRef.current.showModal();
+  // URL-Parameter frisch auslesen (fängt auch direkte Einstiege ab)
+  const params = new URLSearchParams(window.location.search);
+  const offerId = params.get("offer");
+
+  // Erst feuern, wenn der Ladezustand fertig ist und Angebote da sind
+  if (!market.loading && offerId && market.offers?.length > 0) {
+    const found = market.offers.find((o) => String(o.id) === String(offerId));
+    
+    // Nur öffnen, wenn das Modal nicht schon offen ist
+    if (found && dialogRef.current && !dialogRef.current.open) {
+      dialogRef.current.showModal();
+    }
   }
-}, [market.loading, linkedOffer]);
+}, [market.loading, market.offers]);
+
 
 function closeLinkedOffer() {
   dialogRef.current?.close();
