@@ -1,53 +1,59 @@
-"""Sending email through Amazon SES (SMTP interface).
+"""Sending email through the Amazon SES API (boto3).
 
-Settings come from environment variables, so no password is in the code:
+Settings come from environment variables (the server's .env):
 
-    SMTP_HOST      e.g. email-smtp.eu-central-1.amazonaws.com (depends on region)
-    SMTP_PORT      587
-    SMTP_USER      SES SMTP username (created in the SES console)
-    SMTP_PASSWORD  SES SMTP password (not the normal AWS secret key)
-    MAIL_FROM      a sender address or domain verified in SES
-    FRONTEND_URL   e.g. https://ernte-retter.example (used in links)
+    MAIL_FROM     sender address verified in SES, e.g. noreply@ernteretter.de
+    AWS_REGION    e.g. eu-central-1
+    FRONTEND_URL  public address of the site, used in links
 
-Without SMTP_HOST (local development) emails are only written to the log.
+AWS credentials are NOT set here. On the server, boto3 picks them up from
+the AWS permissions of the machine (IAM role), so no keys are in the code.
+
+Without MAIL_FROM (local development) emails are only written to the log.
 """
 
 import logging
 import os
-import smtplib
-from email.message import EmailMessage
 
 logger = logging.getLogger(__name__)
 
-SMTP_HOST = os.getenv("SMTP_HOST")
-SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
-SMTP_USER = os.getenv("SMTP_USER")
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
-MAIL_FROM = os.getenv("MAIL_FROM", SMTP_USER)
+MAIL_FROM = os.getenv("MAIL_FROM")
+AWS_REGION = os.getenv("AWS_REGION", "eu-central-1")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
+
+_client = None
+
+
+def _ses_client():
+    # imported here so local development works without boto3 installed
+    global _client
+    if _client is None:
+        import boto3
+
+        _client = boto3.client("ses", region_name=AWS_REGION)
+    return _client
 
 
 def send_email(to: str, subject: str, body: str) -> None:
     """Send one plain-text email. Never raises, so a mail problem cannot
     break the request that triggered it."""
-    if not SMTP_HOST:
+    if not MAIL_FROM:
         logger.warning(
-            "Email not sent (SMTP not configured): %s -> %s\n%s",
+            "Email not sent (MAIL_FROM not set): %s -> %s\n%s",
             subject,
             to,
             body,
         )
         return
-    msg = EmailMessage()
-    msg["From"] = MAIL_FROM
-    msg["To"] = to
-    msg["Subject"] = subject
-    msg.set_content(body)
     try:
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as server:
-            server.starttls()
-            server.login(SMTP_USER, SMTP_PASSWORD)
-            server.send_message(msg)
+        _ses_client().send_email(
+            Source=MAIL_FROM,
+            Destination={"ToAddresses": [to]},
+            Message={
+                "Subject": {"Data": subject, "Charset": "UTF-8"},
+                "Body": {"Text": {"Data": body, "Charset": "UTF-8"}},
+            },
+        )
     except Exception:
         logger.exception("Email to %s failed", to)
 

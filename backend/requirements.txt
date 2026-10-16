@@ -6,3 +6,4 @@ pyJWT
 python-multipart
 httpx
 email-validator
+boto3
