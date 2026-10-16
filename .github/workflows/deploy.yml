@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+permissions:
+  id-token: write   # nötig für die AWS-Anmeldung per OIDC
+  contents: read
+
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
@@ -50,27 +54,40 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
+          script_stop: true
           script: |
             cd ~/Ernte-Retter
-            
+
             # 1. Neuesten Code aus Git ziehen
             git fetch origin main
             git reset --hard origin/main
 
-            # 2. .env-Datei aus GitHub Secrets generieren
-            cat << 'EOF' > .env
+            # 2. .env zuerst in eine Hilfsdatei schreiben und prüfen,
+            #    damit eine fehlerhafte Datei nie die laufende Seite beschädigt
+            cat << 'EOF' > .env.new
             FRONTEND_URL=${{ secrets.FRONTEND_URL }}
             MAIL_FROM=${{ secrets.MAIL_FROM }}
             AWS_REGION=${{ secrets.AWS_REGION }}
             POSTGRES_USER=${{ secrets.POSTGRES_USER }}
             POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+            DATABASE_URL=postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@db:5432/${{ secrets.POSTGRES_DB }}
             EOF
+
+            for var in POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB; do
+              value=$(grep "^${var}=" .env.new | cut -d= -f2-)
+              if [ -z "$value" ]; then
+                echo "Fehler: GitHub-Secret ${var} ist leer oder nicht angelegt."
+                rm -f .env.new
+                exit 1
+              fi
+            done
+            mv .env.new .env
 
             # 3. Docker-Container neu erzeugen und im Hintergrund starten
             docker compose up -d --build --force-recreate
 
-            # 4. Robuster Healthcheck direkt im Backend-Container
+            # 4. Healthcheck direkt im Backend-Container
             echo "Warte darauf, dass das Backend im Container bereit ist..."
             for i in {1..30}; do
               if docker compose exec -T backend python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs')" 2>/dev/null; then
@@ -82,13 +99,22 @@ jobs:
             done
 
             echo "Fehler: Backend hat nicht rechtzeitig geantwortet."
+            echo "---- docker compose ps ----"
+            docker compose ps
+            echo "---- Backend-Log (letzte 40 Zeilen) ----"
+            docker compose logs --tail=40 backend
+            echo "---- DB-Log (letzte 15 Zeilen) ----"
+            docker compose logs --tail=15 db
             exit 1
 
-      - name: Invalidate CloudFront Cache
-        uses: chetan/invalidate-cloudfront-action@v2
+      - name: AWS-Anmeldung per OIDC
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-          distribution-id: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
-          paths: "/*"
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: eu-central-1
+
+      - name: CloudFront-Cache invalidieren
+        run: >
+          aws cloudfront create-invalidation
+          --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}
+          --paths "/*"
