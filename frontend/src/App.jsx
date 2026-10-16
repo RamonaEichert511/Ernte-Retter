@@ -72,6 +72,10 @@ function App() {
 
     return () => window.removeEventListener("hashchange", update);
   }, [market.refresh]);
+  function searchFromHero(query) {
+    setSearchRequest({ query, id: Date.now() });
+    window.location.hash = "rezepte";
+  }
 
   // NEU: Tasks dauerhaft per Custom Hook speichern (Bonus-Aufgabe)
   const [tasks, setTasks] = useState([]);
