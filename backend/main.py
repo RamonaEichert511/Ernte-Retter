@@ -1,31 +1,33 @@
 import os
 from contextlib import asynccontextmanager
-from decimal import Decimal, InvalidOperation
+from typing import Optional
 
 import psycopg.errors
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, Query, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
-
-from creation.schemas import (
-    Aufgabe,
-    AufgabeCreate,
-    Offer,
-    OfferCreate,
-    Token,
-    UserCreate,
-    UserPublic,
-    Favorit, 
-    FavoritCreate, 
-    Wecker, 
-    WeckerCreate, 
-)
 
 from auth import (
     create_access_token,
     get_current_user,
     hash_password,
     verify_password,
+)
+from creation.schemas import (
+    Aufgabe,
+    AufgabeCreate,
+    Favorit,
+    FavoritCreate,
+    Offer,
+    OfferCreate,
+    Rezept,
+    RezeptCreate,
+    Rezeptkategorie,
+    Token,
+    UserCreate,
+    UserPublic,
+    Wecker,
+    WeckerCreate,
 )
 from database import db, init_db
 
@@ -63,7 +65,11 @@ def register(user: UserCreate):
             row = conn.execute(
                 "INSERT INTO users (name, email, password_hash) "
                 "VALUES (%s, %s, %s) RETURNING id, name, email",
-                (user.name.strip(), user.email.lower(), hash_password(user.password)),
+                (
+                    user.name.strip(),
+                    user.email.lower(),
+                    hash_password(user.password),
+                ),
             ).fetchone()
         except psycopg.errors.UniqueViolation:
             raise HTTPException(
@@ -102,30 +108,13 @@ def get_me(current_user: UserPublic = Depends(get_current_user)):
     return current_user
 
 
-# ---------- Offers ----------
+# ---------- Offers (Ernte teilen) ----------
 
 
 OFFER_SELECT = (
     "SELECT o.*, u.name AS owner_name "
     "FROM offers o JOIN users u ON u.id = o.owner_id "
 )
-
-
-def parse_menge(value) -> Decimal:
-    """Leere Menge wird zu 1, sonst muss es eine positive Zahl sein."""
-    if value is None or str(value).strip() == "":
-        return Decimal(1)
-    try:
-        menge = Decimal(str(value).strip().replace(",", "."))
-    except InvalidOperation:
-        raise HTTPException(
-            status_code=422, detail="Menge muss eine Zahl sein"
-        )
-    if not menge.is_finite() or menge <= 0:
-        raise HTTPException(
-            status_code=422, detail="Menge muss größer als 0 sein"
-        )
-    return menge
 
 
 @app.get("/offers", response_model=list[Offer])
@@ -140,9 +129,6 @@ def list_offers():
 def create_offer(
     data: OfferCreate, current_user: dict = Depends(get_current_user)
 ):
-    menge = parse_menge(data.menge)
-    einheit = data.einheit or "Stück"
-    location = data.location or ""
     with db() as conn:
         new = conn.execute(
             "INSERT INTO offers "
@@ -151,9 +137,9 @@ def create_offer(
             (
                 data.title,
                 data.description,
-                menge,
-                einheit,
-                location,
+                data.menge,
+                data.einheit,
+                data.location,
                 current_user["id"],
             ),
         ).fetchone()
@@ -249,12 +235,28 @@ def create_aufgabe(
 ):
     with db() as conn:
         return conn.execute(
-            "INSERT INTO aufgaben (user_id, title) VALUES (%s, %s) RETURNING *",
-            (current_user["id"], data.title),
+            "INSERT INTO aufgaben (user_id, title, priority, kategorie) "
+            "VALUES (%s, %s, %s, %s) RETURNING *",
+            (current_user["id"], data.title, data.priority, data.kategorie),
         ).fetchone()
 
 
-@app.delete("/aufgaben/{aufgabe_id}", status_code=status.HTTP_204_NO_CONTENT)
+@app.put("/aufgaben/{aufgabe_id}/toggle", response_model=Aufgabe)
+def toggle_aufgabe(
+    aufgabe_id: int, current_user: dict = Depends(get_current_user)
+):
+    with db() as conn:
+        row = conn.execute(
+            "UPDATE aufgaben SET done = NOT done "
+            "WHERE id = %s AND user_id = %s RETURNING *",
+            (aufgabe_id, current_user["id"]),
+        ).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="Aufgabe not found")
+        return row
+
+
+@app.delete("/aufgaben/{aufgabe_id}", status_code=204)
 def delete_aufgabe(
     aufgabe_id: int, current_user: dict = Depends(get_current_user)
 ):
@@ -266,14 +268,89 @@ def delete_aufgabe(
         if row is None:
             raise HTTPException(status_code=404, detail="Aufgabe not found")
 
-# -------- favoriten -----------
+
+# ---------- Rezepte ----------
 
 
-@app.get("/favoriten", response_model=list[Favorit])
+REZEPT_SELECT = (
+    "SELECT r.*, u.name AS owner_name "
+    "FROM rezepte r LEFT JOIN users u ON u.id = r.owner_id "
+)
+
+
+@app.get("/rezepte", response_model=list[Rezept])
+def list_rezepte(kategorie: Optional[Rezeptkategorie] = Query(default=None)):
+    with db() as conn:
+        if kategorie:
+            return conn.execute(
+                REZEPT_SELECT
+                + "WHERE r.kategorie = %s ORDER BY r.created_at DESC",
+                (kategorie,),
+            ).fetchall()
+        return conn.execute(
+            REZEPT_SELECT + "ORDER BY r.created_at DESC"
+        ).fetchall()
+
+
+@app.get("/rezepte/{rezept_id}", response_model=Rezept)
+def get_rezept(rezept_id: int):
+    with db() as conn:
+        row = conn.execute(
+            REZEPT_SELECT + "WHERE r.id = %s", (rezept_id,)
+        ).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="Rezept not found")
+        return row
+
+
+@app.post("/rezepte", response_model=Rezept, status_code=201)
+def create_rezept(
+    data: RezeptCreate, current_user: dict = Depends(get_current_user)
+):
+    with db() as conn:
+        new = conn.execute(
+            "INSERT INTO rezepte "
+            "(owner_id, title, beschreibung, zutaten, schritte, kategorie, "
+            "image_url) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id",
+            (
+                current_user["id"],
+                data.title,
+                data.beschreibung,
+                data.zutaten,
+                data.schritte,
+                data.kategorie,
+                data.image_url,
+            ),
+        ).fetchone()
+        return conn.execute(
+            REZEPT_SELECT + "WHERE r.id = %s", (new["id"],)
+        ).fetchone()
+
+
+@app.delete("/rezepte/{rezept_id}", status_code=204)
+def delete_rezept(
+    rezept_id: int, current_user: dict = Depends(get_current_user)
+):
+    with db() as conn:
+        row = conn.execute(
+            "DELETE FROM rezepte WHERE id = %s AND owner_id = %s RETURNING id",
+            (rezept_id, current_user["id"]),
+        ).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="Rezept not found")
+
+
+# ---------- Favoriten ----------
+
+
+@app.get("/favoriten", response_model=list[Rezept])
 def list_favoriten(current_user: dict = Depends(get_current_user)):
     with db() as conn:
         return conn.execute(
-            "SELECT * FROM favoriten WHERE user_id = %s ORDER BY created_at",
+            "SELECT r.*, u.name AS owner_name FROM favoriten f "
+            "JOIN rezepte r ON r.id = f.recipe_id "
+            "LEFT JOIN users u ON u.id = r.owner_id "
+            "WHERE f.user_id = %s ORDER BY f.created_at",
             (current_user["id"],),
         ).fetchall()
 
@@ -283,17 +360,20 @@ def add_favorit(
     data: FavoritCreate, current_user: dict = Depends(get_current_user)
 ):
     with db() as conn:
-        return conn.execute(
-            "INSERT INTO favoriten (user_id, recipe_id) VALUES (%s, %s) "
-            "ON CONFLICT (user_id, recipe_id) "
-            "DO UPDATE SET recipe_id = EXCLUDED.recipe_id RETURNING *",
-            (current_user["id"], data.recipe_id),
-        ).fetchone()
+        try:
+            return conn.execute(
+                "INSERT INTO favoriten (user_id, recipe_id) VALUES (%s, %s) "
+                "ON CONFLICT (user_id, recipe_id) "
+                "DO UPDATE SET recipe_id = EXCLUDED.recipe_id RETURNING *",
+                (current_user["id"], data.recipe_id),
+            ).fetchone()
+        except psycopg.errors.ForeignKeyViolation:
+            raise HTTPException(status_code=404, detail="Rezept not found")
 
 
 @app.delete("/favoriten/{recipe_id}", status_code=204)
 def remove_favorit(
-    recipe_id: str, current_user: dict = Depends(get_current_user)
+    recipe_id: int, current_user: dict = Depends(get_current_user)
 ):
     with db() as conn:
         row = conn.execute(
@@ -305,7 +385,7 @@ def remove_favorit(
             raise HTTPException(status_code=404, detail="Favorit not found")
 
 
-# -------- wecker (Vorratskammer) -----------
+# ---------- Wecker (Vorratskammer) ----------
 
 
 @app.get("/wecker", response_model=list[Wecker])
@@ -325,9 +405,13 @@ def create_wecker(
         return conn.execute(
             "INSERT INTO wecker (user_id, produkt, einlegedatum, fertig_am) "
             "VALUES (%s, %s, %s, %s) RETURNING *",
-            (current_user["id"], data.produkt, data.einlegedatum, data.fertig_am),
+            (
+                current_user["id"],
+                data.produkt,
+                data.einlegedatum,
+                data.fertig_am,
+            ),
         ).fetchone()
-
 
 
 @app.delete("/wecker/{wecker_id}", status_code=204)

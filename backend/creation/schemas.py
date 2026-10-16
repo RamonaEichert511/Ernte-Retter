@@ -4,9 +4,15 @@ from typing import Literal, Optional
 from pydantic import BaseModel, EmailStr, Field
 
 Einheit = Literal["kg", "g", "Stück", "Bund", "Liter"]
+Prioritaet = Literal["hoch", "mittel", "niedrig"]
+Aufgabenkategorie = Literal[
+    "allgemein", "garten", "küche", "einkochen", "einkauf"
+]
+# the name of the second category ("abendessen") is still open
+Rezeptkategorie = Literal["haltbarmachen", "abendessen"]
 
 
-# ---------- Offers ----------
+# ---------- Offers (Ernte teilen) ----------
 
 
 class OfferCreate(BaseModel):
@@ -27,7 +33,7 @@ class Offer(BaseModel):
     owner_name: str
     reserved_by: Optional[int] = None
     menge: float
-    einheit: Einheit = "Stück"
+    einheit: Einheit
     location: str
 
 
@@ -61,13 +67,46 @@ class Token(BaseModel):
 
 class AufgabeCreate(BaseModel):
     title: str
+    priority: Prioritaet = "mittel"
+    kategorie: Aufgabenkategorie = "allgemein"
 
 
 class Aufgabe(BaseModel):
     id: int
     title: str
+    priority: Prioritaet
+    kategorie: Aufgabenkategorie
     done: bool
     created_at: datetime
+
+
+# ---------- Rezepte ----------
+
+
+class RezeptCreate(BaseModel):
+    title: str = Field(min_length=1)
+    beschreibung: Optional[str] = None
+    zutaten: list[str] = []
+    schritte: list[str] = []
+    kategorie: Rezeptkategorie = "abendessen"
+    image_url: Optional[str] = None
+
+
+class Rezept(BaseModel):
+    id: int
+    owner_id: Optional[int] = None
+    owner_name: Optional[str] = None
+    title: str
+    beschreibung: Optional[str] = None
+    zutaten: list[str]
+    schritte: list[str]
+    kategorie: Rezeptkategorie
+    image_url: Optional[str] = None
+    created_at: datetime
+
+
+# ---------- Favoriten ----------
+
 
 class FavoritCreate(BaseModel):
     recipe_id: int
@@ -77,6 +116,9 @@ class Favorit(BaseModel):
     id: int
     recipe_id: int
     created_at: datetime
+
+
+# ---------- Wecker (Vorratskammer) ----------
 
 
 class WeckerCreate(BaseModel):
