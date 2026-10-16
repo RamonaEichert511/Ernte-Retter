@@ -192,77 +192,92 @@ def init_db():
             """
         )
 
-        # ---------- starter recipes (only if the table is empty) ----------
-        anzahl = conn.execute(
-            "SELECT COUNT(*) AS n FROM rezepte"
-        ).fetchone()["n"]
-        if anzahl == 0:
+        # ---------- Startrezepte ----------
+        startrezepte = [
+            (
+                "Saure Gurken",
+                "Klassisch eingelegt, nach ein paar Wochen perfekt.",
+                [
+                    "1 kg kleine Gurken",
+                    "1 l Wasser",
+                    "50 g Salz",
+                    "Dill",
+                    "Senfkörner",
+                ],
+                [
+                    "Gurken waschen und in Gläser schichten.",
+                    "Wasser mit Salz aufkochen und abkühlen lassen.",
+                    "Dill und Senfkörner zugeben, Lake über die Gurken gießen.",
+                    "Gläser verschließen und mindestens 4 Wochen dunkel lagern.",
+                ],
+                "haltbarmachen",
+            ),
+            (
+                "Kürbissuppe",
+                "Cremige Suppe für den Herbst.",
+                [
+                    "1 Hokkaido-Kürbis",
+                    "1 Zwiebel",
+                    "700 ml Gemüsebrühe",
+                    "200 ml Sahne",
+                ],
+                [
+                    "Kürbis und Zwiebel würfeln und anbraten.",
+                    "Mit Brühe ablöschen und 20 Minuten köcheln.",
+                    "Pürieren, Sahne zugeben und abschmecken.",
+                ],
+                "abendessen",
+            ),
+            (
+                "Tomaten soße",
+                "Leckere Tomatensoße ",
+                [
+                    "1200 g Tomaten",
+                    "1 Zwiebel, rot fein gehackt",
+                    "2 Knoblauchzehen fein gehackt",
+                    "2EL Olivenöl",
+                    "50 g Tomatenmark",
+                    "1 TL Salz",
+                    "1 TL Rohrohrzucker oder weißer Zucker",
+                    "1 TL Paprika rosenscharf oder milder Paprika oder Chilipulver",
+                    "1 Handvoll frische oder getrocknete Kräuter z.B. Basilikum, Oregano, Thymian"
+                ],
+                [
+                    "Vorbereitung",
+                    "Zwiebel und Knoblauch schälen und fein hacken. Tomaten vierteln, den Blütenansatz herausschneiden und dann in Stücke schneiden. Alle übrigen Zutaten bereitstellen.",
+                    "1200 g Tomaten | 1 Zwiebel, rot | 2 Knoblauchzehen",
+                    "Gläser säubern und heiß ausspülen, ebenso die Deckel und den Einfülltrichter (falls vorhanden).",
+                    "Zubereitung",
+                    "1. In einem großen Topf oder Pfanne Öl erhitzen und die Zwiebeln darin abraten. Knoblauch kurz mit anschwitzen, Tomatenmark hinzufügen und kurz mitbraten.",
+                    "2 EL Olivenöl | 50 g Tomatenmark",
+                    "2. Nun die Tomatenstücke zugeben und mit Salz, Paprikapulver und Zucker würzen, aufkochen und dann 30 Minuten zugedeckt köcheln lassen. Die kleingeschnittenen Kräuter 5 Minuten vor Ende zugeben.",
+                    "1 TL Salz | 1 TL Rohrohrzucker | 1 TL Paprika rosenscharf | 1 Handvoll frische oder getrocknete Kräuter",
+                    "3. Kurz abkühlen, dann kommt die Tomatensoße in den Mixer und wird einmal kräftig durchgemixt, damit keine Schalenstücke zurückbleiben. (Alternativ mit dem Pürierstab mixen). Dann gehts zurück in den Topf und nochmals kurz aufkochen lassen. Ggf. nochmals abschmecken.",
+                    "Fertigstellung",
+                    "Ofen auf 100 Grad Umluft vorheizen.",
+                    "Die heiße Tomatensoße in die Gläser füllen, dabei auf saubere Ränder achten und sofort verschließen.",
+                    "Gläser in eine Auflaufform oder in die tiefe Fettpfanne stellen (sie sollen sich nicht berühren). In den heißen Ofen schieben, 2-3 cm hoch heißes Wasser zugießen und mindestens 30 Minuten bei 100 Grad im Ofen einkochen. ",
+                    "Beim Abkühlen bildet sich ein Vakuum. Das erkennst du daran, dass sich der Deckel etwas einzieht und bei Berührung weder knackt noch nachgibt. Damit ist die Tomatensoße mindestens 1 Jahr haltbar.",
+                    "Fülle die Tomatensoße in unterschiedlich große Gläser, dann hast du für verschiedene Gerichte immer die richtige Menge zur Hand. Außerdem ist selbstgemachte Tomatensoße ein beliebtes Gastgeschenk, wenn du eingeladen bist."
+                ],
+                "haltbarmachen"
+            )
+        ]
+
+        # Gleichzeitige Starts dürfen keine doppelten Rezepte anlegen.
+        conn.execute("LOCK TABLE rezepte IN SHARE ROW EXCLUSIVE MODE")
+
+        for rezept in startrezepte:
             conn.execute(
-                "INSERT INTO rezepte "
-                "(title, beschreibung, zutaten, schritte, kategorie) "
-                "VALUES (%s, %s, %s, %s, %s), (%s, %s, %s, %s, %s)",
-                (
-                    "Saure Gurken",
-                    "Klassisch eingelegt, nach ein paar Wochen perfekt.",
-                    [
-                        "1 kg kleine Gurken",
-                        "1 l Wasser",
-                        "50 g Salz",
-                        "Dill",
-                        "Senfkörner",
-                    ],
-                    [
-                        "Gurken waschen und in Gläser schichten.",
-                        "Wasser mit Salz aufkochen und abkühlen lassen.",
-                        "Dill und Senfkörner zugeben, Lake über die Gurken gießen.",
-                        "Gläser verschließen und mindestens 4 Wochen dunkel lagern.",
-                    ],
-                    "haltbarmachen",
-                    "Kürbissuppe",
-                    "Cremige Suppe für den Herbst.",
-                    [
-                        "1 Hokkaido-Kürbis",
-                        "1 Zwiebel",
-                        "700 ml Gemüsebrühe",
-                        "200 ml Sahne",
-                    ],
-                    [
-                        "Kürbis und Zwiebel würfeln und anbraten.",
-                        "Mit Brühe ablöschen und 20 Minuten köcheln.",
-                        "Pürieren, Sahne zugeben und abschmecken.",
-                    ],
-                    "abendessen",
-                    "Tomaten soße",
-                    "Leckere Tomatensoße ",
-                    [
-                        "1200 g Tomaten",
-                        "1 Zwiebel, rot fein gehackt",
-                        "2 Knoblauchzehen fein gehackt",
-                        "2EL Olivenöl",
-                        "50 g Tomatenmark",
-                        "1 TL Salz",
-                        "1 TL Rohrohrzucker oder weißer Zucker",
-                        "1 TL Paprika rosenscharf oder milder Paprika oder Chilipulver",
-                        "1 Handvoll frische oder getrocknete Kräuter z.B. Basilikum, Oregano, Thymian"
-                    ],
-                    [
-                        "Vorbereitung",
-                        "Zwiebel und Knoblauch schälen und fein hacken. Tomaten vierteln, den Blütenansatz herausschneiden und dann in Stücke schneiden. Alle übrigen Zutaten bereitstellen.",
-                        "1200 g Tomaten | 1 Zwiebel, rot | 2 Knoblauchzehen",
-                        "Gläser säubern und heiß ausspülen, ebenso die Deckel und den Einfülltrichter (falls vorhanden).",
-                        "Zubereitung",
-                        "1. In einem großen Topf oder Pfanne Öl erhitzen und die Zwiebeln darin abraten. Knoblauch kurz mit anschwitzen, Tomatenmark hinzufügen und kurz mitbraten.",
-                        "2 EL Olivenöl | 50 g Tomatenmark",
-                        "2. Nun die Tomatenstücke zugeben und mit Salz, Paprikapulver und Zucker würzen, aufkochen und dann 30 Minuten zugedeckt köcheln lassen. Die kleingeschnittenen Kräuter 5 Minuten vor Ende zugeben.",
-                        "1 TL Salz | 1 TL Rohrohrzucker | 1 TL Paprika rosenscharf | 1 Handvoll frische oder getrocknete Kräuter",
-                        "3. Kurz abkühlen, dann kommt die Tomatensoße in den Mixer und wird einmal kräftig durchgemixt, damit keine Schalenstücke zurückbleiben. (Alternativ mit dem Pürierstab mixen). Dann gehts zurück in den Topf und nochmals kurz aufkochen lassen. Ggf. nochmals abschmecken.",
-                        "Fertigstellung",
-                        "Ofen auf 100 Grad Umluft vorheizen.",
-                        "Die heiße Tomatensoße in die Gläser füllen, dabei auf saubere Ränder achten und sofort verschließen.",
-                        "Gläser in eine Auflaufform oder in die tiefe Fettpfanne stellen (sie sollen sich nicht berühren). In den heißen Ofen schieben, 2-3 cm hoch heißes Wasser zugießen und mindestens 30 Minuten bei 100 Grad im Ofen einkochen. ",
-                        "Beim Abkühlen bildet sich ein Vakuum. Das erkennst du daran, dass sich der Deckel etwas einzieht und bei Berührung weder knackt noch nachgibt. Damit ist die Tomatensoße mindestens 1 Jahr haltbar.",
-                        "Fülle die Tomatensoße in unterschiedlich große Gläser, dann hast du für verschiedene Gerichte immer die richtige Menge zur Hand. Außerdem ist selbstgemachte Tomatensoße ein beliebtes Gastgeschenk, wenn du eingeladen bist."
-                    ],
-                    "haltbarmachen"
-                ),
+                """
+                INSERT INTO rezepte
+                    (title, beschreibung, zutaten, schritte, kategorie)
+                SELECT %s, %s, %s, %s, %s
+                WHERE NOT EXISTS (
+                    SELECT 1
+                    FROM rezepte
+                    WHERE title = %s AND owner_id IS NULL
+                )
+                """,
+                (*rezept, rezept[0]),
             )
