@@ -30,9 +30,26 @@ def init_db():
                 name TEXT NOT NULL,
                 email TEXT NOT NULL,
                 password_hash TEXT NOT NULL,
+                email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+                verify_token_hash TEXT,
+                verify_expires TIMESTAMPTZ,
                 created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
             )
             """
+        )
+        # for databases where the users table already existed: accounts
+        # created before email verification count as verified, so nobody
+        # is locked out. New registrations set the value explicitly.
+        conn.execute(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified "
+            "BOOLEAN NOT NULL DEFAULT TRUE"
+        )
+        conn.execute(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS verify_token_hash TEXT"
+        )
+        conn.execute(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS verify_expires "
+            "TIMESTAMPTZ"
         )
         # one account per email, regardless of upper/lower case
         conn.execute(
@@ -74,6 +91,25 @@ def init_db():
             "TEXT NOT NULL DEFAULT ''"
         )
 
+        # ---------- nachrichten (chat about an offer) ----------
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS nachrichten (
+                id SERIAL PRIMARY KEY,
+                offer_id INTEGER NOT NULL REFERENCES offers(id) ON DELETE CASCADE,
+                sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                recipient_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                text TEXT NOT NULL,
+                gelesen BOOLEAN NOT NULL DEFAULT FALSE,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS nachrichten_offer_idx "
+            "ON nachrichten (offer_id, created_at)"
+        )
+
         # ---------- aufgaben ----------
         conn.execute(
             """
@@ -105,7 +141,6 @@ def init_db():
                 id SERIAL PRIMARY KEY,
                 owner_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
                 title TEXT NOT NULL,
-                info TEXT NOT NULL,
                 beschreibung TEXT,
                 zutaten TEXT[] NOT NULL DEFAULT '{}',
                 schritte TEXT[] NOT NULL DEFAULT '{}',

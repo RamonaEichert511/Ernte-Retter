@@ -1,9 +1,18 @@
+import hashlib
 import os
+import secrets
 from contextlib import asynccontextmanager
 from typing import Optional
 
 import psycopg.errors
-from fastapi import Depends, FastAPI, HTTPException, Query, status
+from fastapi import (
+    BackgroundTasks,
+    Depends,
+    FastAPI,
+    HTTPException,
+    Query,
+    status,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -18,18 +27,30 @@ from creation.schemas import (
     AufgabeCreate,
     Favorit,
     FavoritCreate,
+    Konversation,
+    Nachricht,
+    NachrichtCreate,
     Offer,
     OfferCreate,
     Rezept,
     RezeptCreate,
     Rezeptkategorie,
+    ResendRequest,
     Token,
     UserCreate,
     UserPublic,
+    VerifyRequest,
     Wecker,
     WeckerCreate,
 )
 from database import db, init_db
+from email_service import (
+    FRONTEND_URL,
+    mail_kontakt,
+    mail_reserviert,
+    mail_verifizierung,
+    send_email,
+)
 
 
 @asynccontextmanager
@@ -56,19 +77,30 @@ app.add_middleware(
 # ---------- Auth ----------
 
 
+def neues_token() -> tuple[str, str]:
+    """Return (token for the email link, hash to store in the database)."""
+    token = secrets.token_urlsafe(32)
+    return token, hashlib.sha256(token.encode()).hexdigest()
+
+
 @app.post(
     "/register", response_model=UserPublic, status_code=status.HTTP_201_CREATED
 )
-def register(user: UserCreate):
+def register(user: UserCreate, background_tasks: BackgroundTasks):
+    token, token_hash = neues_token()
     with db() as conn:
         try:
             row = conn.execute(
-                "INSERT INTO users (name, email, password_hash) "
-                "VALUES (%s, %s, %s) RETURNING id, name, email",
+                "INSERT INTO users "
+                "(name, email, password_hash, email_verified, "
+                "verify_token_hash, verify_expires) "
+                "VALUES (%s, %s, %s, FALSE, %s, NOW() + INTERVAL '24 hours') "
+                "RETURNING id, name, email",
                 (
                     user.name.strip(),
                     user.email.lower(),
                     hash_password(user.password),
+                    token_hash,
                 ),
             ).fetchone()
         except psycopg.errors.UniqueViolation:
@@ -76,14 +108,58 @@ def register(user: UserCreate):
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Email is already registered",
             )
-        return row
+    subject, body = mail_verifizierung(
+        row["name"], f"{FRONTEND_URL}/verify?token={token}"
+    )
+    background_tasks.add_task(send_email, row["email"], subject, body)
+    return row
+
+
+@app.post("/verify-email", status_code=status.HTTP_204_NO_CONTENT)
+def verify_email(data: VerifyRequest):
+    token_hash = hashlib.sha256(data.token.encode()).hexdigest()
+    with db() as conn:
+        row = conn.execute(
+            "UPDATE users SET email_verified = TRUE, "
+            "verify_token_hash = NULL, verify_expires = NULL "
+            "WHERE verify_token_hash = %s AND verify_expires > NOW() "
+            "RETURNING id",
+            (token_hash,),
+        ).fetchone()
+        if row is None:
+            raise HTTPException(
+                status_code=400, detail="Link ungültig oder abgelaufen"
+            )
+
+
+@app.post("/resend-verification", status_code=status.HTTP_202_ACCEPTED)
+def resend_verification(data: ResendRequest, background_tasks: BackgroundTasks):
+    token, token_hash = neues_token()
+    with db() as conn:
+        row = conn.execute(
+            "UPDATE users SET verify_token_hash = %s, "
+            "verify_expires = NOW() + INTERVAL '24 hours' "
+            "WHERE email = %s AND NOT email_verified RETURNING name, email",
+            (token_hash, data.email.lower()),
+        ).fetchone()
+    if row is not None:
+        subject, body = mail_verifizierung(
+            row["name"], f"{FRONTEND_URL}/verify?token={token}"
+        )
+        background_tasks.add_task(send_email, row["email"], subject, body)
+    # same answer whether or not the account exists
+    return {
+        "detail": "Falls ein unbestätigtes Konto existiert, "
+        "wurde eine E-Mail gesendet."
+    }
 
 
 @app.post("/login", response_model=Token)
 def login(data: OAuth2PasswordRequestForm = Depends()):
     with db() as conn:
         row = conn.execute(
-            "SELECT id, password_hash FROM users WHERE email = %s",
+            "SELECT id, password_hash, email_verified FROM users "
+            "WHERE email = %s",
             (data.username.lower(),),
         ).fetchone()
 
@@ -95,6 +171,12 @@ def login(data: OAuth2PasswordRequestForm = Depends()):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Benutzername oder Passwort ist falsch",
             headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not row["email_verified"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="E-Mail-Adresse ist noch nicht bestätigt",
         )
 
     return {
@@ -171,7 +253,9 @@ def delete_offer(
 
 @app.put("/offers/{offer_id}/reserve", response_model=Offer)
 def reserve_offer(
-    offer_id: int, current_user: dict = Depends(get_current_user)
+    offer_id: int,
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_user),
 ):
     with db() as conn:
         row = conn.execute(
@@ -180,9 +264,15 @@ def reserve_offer(
             (current_user["id"], offer_id),
         ).fetchone()
         if row is not None:
-            return conn.execute(
+            offer = conn.execute(
                 OFFER_SELECT + "WHERE o.id = %s", (offer_id,)
             ).fetchone()
+            owner = conn.execute(
+                "SELECT email FROM users WHERE id = %s", (offer["owner_id"],)
+            ).fetchone()
+            subject, body = mail_reserviert(offer["owner_name"], offer["title"])
+            background_tasks.add_task(send_email, owner["email"], subject, body)
+            return offer
         exists = conn.execute(
             "SELECT 1 FROM offers WHERE id = %s", (offer_id,)
         ).fetchone()
@@ -215,6 +305,149 @@ def withdraw_reservation(
         raise HTTPException(
             status_code=403, detail="You have not reserved this offer"
         )
+
+
+# ---------- Nachrichten (Chat) ----------
+#
+# A conversation is always between the owner of an offer and one other
+# person. The other person starts it; the owner can answer (or write to
+# whoever reserved the offer).
+
+
+def _zwischen(offer_id: int, a: int, b: int):
+    """SQL condition and params for messages between users a and b."""
+    return (
+        "offer_id = %s AND ((sender_id = %s AND recipient_id = %s) "
+        "OR (sender_id = %s AND recipient_id = %s))",
+        (offer_id, a, b, b, a),
+    )
+
+
+@app.post(
+    "/offers/{offer_id}/nachrichten",
+    response_model=Nachricht,
+    status_code=status.HTTP_201_CREATED,
+)
+def send_nachricht(
+    offer_id: int,
+    data: NachrichtCreate,
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_user),
+):
+    me = current_user["id"]
+    text = data.text.strip()
+    if not text:
+        raise HTTPException(status_code=422, detail="Nachricht ist leer")
+    with db() as conn:
+        offer = conn.execute(
+            "SELECT id, title, owner_id, reserved_by FROM offers WHERE id = %s",
+            (offer_id,),
+        ).fetchone()
+        if offer is None:
+            raise HTTPException(status_code=404, detail="Offer not found")
+
+        if me == offer["owner_id"]:
+            partner = data.an
+            if partner is None or partner == me:
+                raise HTTPException(
+                    status_code=422, detail="Empfänger fehlt"
+                )
+            hat_geschrieben = conn.execute(
+                "SELECT 1 FROM nachrichten WHERE offer_id = %s "
+                "AND sender_id = %s AND recipient_id = %s LIMIT 1",
+                (offer_id, partner, me),
+            ).fetchone()
+            if hat_geschrieben is None and offer["reserved_by"] != partner:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Du kannst nur Personen anschreiben, "
+                    "die sich gemeldet oder reserviert haben",
+                )
+        else:
+            partner = offer["owner_id"]
+
+        bedingung, params = _zwischen(offer_id, me, partner)
+        bisher = conn.execute(
+            f"SELECT 1 FROM nachrichten WHERE {bedingung} LIMIT 1", params
+        ).fetchone()
+
+        row = conn.execute(
+            "INSERT INTO nachrichten (offer_id, sender_id, recipient_id, text) "
+            "VALUES (%s, %s, %s, %s) RETURNING *",
+            (offer_id, me, partner, text),
+        ).fetchone()
+
+        # email only for the first message of a conversation
+        if bisher is None:
+            empfaenger = conn.execute(
+                "SELECT email FROM users WHERE id = %s", (partner,)
+            ).fetchone()
+            if empfaenger is not None:
+                subject, body = mail_kontakt(offer["title"])
+                background_tasks.add_task(
+                    send_email, empfaenger["email"], subject, body
+                )
+        return row
+
+
+@app.get("/offers/{offer_id}/nachrichten", response_model=list[Nachricht])
+def list_nachrichten(
+    offer_id: int,
+    mit: Optional[int] = None,
+    current_user: dict = Depends(get_current_user),
+):
+    me = current_user["id"]
+    with db() as conn:
+        offer = conn.execute(
+            "SELECT owner_id FROM offers WHERE id = %s", (offer_id,)
+        ).fetchone()
+        if offer is None:
+            raise HTTPException(status_code=404, detail="Offer not found")
+        if mit is None:
+            if me == offer["owner_id"]:
+                raise HTTPException(
+                    status_code=422, detail="Parameter 'mit' fehlt"
+                )
+            mit = offer["owner_id"]
+
+        bedingung, params = _zwischen(offer_id, me, mit)
+        rows = conn.execute(
+            f"SELECT * FROM nachrichten WHERE {bedingung} "
+            "ORDER BY created_at, id",
+            params,
+        ).fetchall()
+        conn.execute(
+            "UPDATE nachrichten SET gelesen = TRUE WHERE offer_id = %s "
+            "AND sender_id = %s AND recipient_id = %s AND NOT gelesen",
+            (offer_id, mit, me),
+        )
+        return rows
+
+
+@app.get("/nachrichten/inbox", response_model=list[Konversation])
+def inbox(current_user: dict = Depends(get_current_user)):
+    me = current_user["id"]
+    with db() as conn:
+        rows = conn.execute(
+            "WITH k AS ("
+            "  SELECT n.*, CASE WHEN n.sender_id = %s "
+            "    THEN n.recipient_id ELSE n.sender_id END AS partner_id "
+            "  FROM nachrichten n "
+            "  WHERE n.sender_id = %s OR n.recipient_id = %s"
+            ") "
+            "SELECT DISTINCT ON (k.offer_id, k.partner_id) "
+            "  k.offer_id, o.title AS offer_title, k.partner_id, "
+            "  u.name AS partner_name, k.text AS letzte_nachricht, "
+            "  k.created_at AS letzte_zeit, "
+            "  (SELECT COUNT(*) FROM nachrichten x "
+            "   WHERE x.offer_id = k.offer_id AND x.sender_id = k.partner_id "
+            "   AND x.recipient_id = %s AND NOT x.gelesen)::int AS ungelesen "
+            "FROM k JOIN offers o ON o.id = k.offer_id "
+            "JOIN users u ON u.id = k.partner_id "
+            "ORDER BY k.offer_id, k.partner_id, k.created_at DESC",
+            (me, me, me, me),
+        ).fetchall()
+    return sorted(rows, key=lambda r: r["letzte_zeit"], reverse=True)
 
 
 # ---------- Aufgaben ----------
@@ -315,7 +548,6 @@ def create_rezept(
             (
                 current_user["id"],
                 data.title,
-                data.info,
                 data.beschreibung,
                 data.zutaten,
                 data.schritte,

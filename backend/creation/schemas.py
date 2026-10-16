@@ -62,6 +62,43 @@ class Token(BaseModel):
     token_type: str
 
 
+class VerifyRequest(BaseModel):
+    token: str
+
+
+class ResendRequest(BaseModel):
+    email: EmailStr
+
+
+# ---------- Nachrichten (Chat) ----------
+
+
+class NachrichtCreate(BaseModel):
+    text: str = Field(min_length=1, max_length=2000)
+    # only needed when the offer owner writes: who should receive it
+    an: Optional[int] = None
+
+
+class Nachricht(BaseModel):
+    id: int
+    offer_id: int
+    sender_id: int
+    recipient_id: int
+    text: str
+    created_at: datetime
+    gelesen: bool
+
+
+class Konversation(BaseModel):
+    offer_id: int
+    offer_title: str
+    partner_id: int
+    partner_name: str
+    letzte_nachricht: str
+    letzte_zeit: datetime
+    ungelesen: int
+
+
 # ---------- Aufgaben ----------
 
 
@@ -85,7 +122,6 @@ class Aufgabe(BaseModel):
 
 class RezeptCreate(BaseModel):
     title: str = Field(min_length=1)
-    info: str = Field(min_length=1)
     beschreibung: Optional[str] = None
     zutaten: list[str] = []
     schritte: list[str] = []
@@ -95,7 +131,6 @@ class RezeptCreate(BaseModel):
 
 class Rezept(BaseModel):
     id: int
-    info: str = Field(min_length=1)
     owner_id: Optional[int] = None
     owner_name: Optional[str] = None
     title: str
