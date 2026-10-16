@@ -232,5 +232,37 @@ def init_db():
                         "Pürieren, Sahne zugeben und abschmecken.",
                     ],
                     "abendessen",
+                    "Tomaten soße",
+                    "Leckere Tomatensoße ",
+                    [
+                        "1200 g Tomaten",
+                        "1 Zwiebel, rot fein gehackt",
+                        "2 Knoblauchzehen fein gehackt",
+                        "2EL Olivenöl",
+                        "50 g Tomatenmark",
+                        "1 TL Salz",
+                        "1 TL Rohrohrzucker oder weißer Zucker",
+                        "1 TL Paprika rosenscharf oder milder Paprika oder Chilipulver",
+                        "1 Handvoll frische oder getrocknete Kräuter z.B. Basilikum, Oregano, Thymian"
+                    ],
+                    [
+                        "Vorbereitung",
+                        "Zwiebel und Knoblauch schälen und fein hacken. Tomaten vierteln, den Blütenansatz herausschneiden und dann in Stücke schneiden. Alle übrigen Zutaten bereitstellen.",
+                        "1200 g Tomaten | 1 Zwiebel, rot | 2 Knoblauchzehen",
+                        "Gläser säubern und heiß ausspülen, ebenso die Deckel und den Einfülltrichter (falls vorhanden).",
+                        "Zubereitung",
+                        "1. In einem großen Topf oder Pfanne Öl erhitzen und die Zwiebeln darin abraten. Knoblauch kurz mit anschwitzen, Tomatenmark hinzufügen und kurz mitbraten.",
+                        "2 EL Olivenöl | 50 g Tomatenmark",
+                        "2. Nun die Tomatenstücke zugeben und mit Salz, Paprikapulver und Zucker würzen, aufkochen und dann 30 Minuten zugedeckt köcheln lassen. Die kleingeschnittenen Kräuter 5 Minuten vor Ende zugeben.",
+                        "1 TL Salz | 1 TL Rohrohrzucker | 1 TL Paprika rosenscharf | 1 Handvoll frische oder getrocknete Kräuter",
+                        "3. Kurz abkühlen, dann kommt die Tomatensoße in den Mixer und wird einmal kräftig durchgemixt, damit keine Schalenstücke zurückbleiben. (Alternativ mit dem Pürierstab mixen). Dann gehts zurück in den Topf und nochmals kurz aufkochen lassen. Ggf. nochmals abschmecken.",
+                        "Fertigstellung",
+                        "Ofen auf 100 Grad Umluft vorheizen.",
+                        "Die heiße Tomatensoße in die Gläser füllen, dabei auf saubere Ränder achten und sofort verschließen.",
+                        "Gläser in eine Auflaufform oder in die tiefe Fettpfanne stellen (sie sollen sich nicht berühren). In den heißen Ofen schieben, 2-3 cm hoch heißes Wasser zugießen und mindestens 30 Minuten bei 100 Grad im Ofen einkochen. ",
+                        "Beim Abkühlen bildet sich ein Vakuum. Das erkennst du daran, dass sich der Deckel etwas einzieht und bei Berührung weder knackt noch nachgibt. Damit ist die Tomatensoße mindestens 1 Jahr haltbar.",
+                        "Fülle die Tomatensoße in unterschiedlich große Gläser, dann hast du für verschiedene Gerichte immer die richtige Menge zur Hand. Außerdem ist selbstgemachte Tomatensoße ein beliebtes Gastgeschenk, wenn du eingeladen bist."
+                    ],
+                    "haltbarmachen"
                 ),
             )
