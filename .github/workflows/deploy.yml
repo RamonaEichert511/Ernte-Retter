@@ -70,10 +70,10 @@ jobs:
             # 3. Docker-Container neu erzeugen und im Hintergrund starten
             docker compose up -d --build --force-recreate
 
-            # 4. Robuster Healthcheck mit Warteschleife (max. 60 Sekunden)
-            echo "Warte darauf, dass das Backend erreichbar ist..."
+            # 4. Robuster Healthcheck direkt im Backend-Container
+            echo "Warte darauf, dass das Backend im Container bereit ist..."
             for i in {1..30}; do
-              if curl -s -f http://localhost:8000/docs > /dev/null; then
+              if docker compose exec -T backend python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs')" 2>/dev/null; then
                 echo "Backend ist erreichbar und bereit!"
                 exit 0
               fi
