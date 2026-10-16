@@ -54,8 +54,8 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
-          script_stop: true
           script: |
+            set -e
             cd ~/Ernte-Retter
 
             # 1. Neuesten Code aus Git ziehen
@@ -72,9 +72,10 @@ jobs:
             POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             POSTGRES_DB=${{ secrets.POSTGRES_DB }}
             DATABASE_URL=postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@db:5432/${{ secrets.POSTGRES_DB }}
+            SECRET_KEY=${{ secrets.SECRET_KEY }}
             EOF
 
-            for var in POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB; do
+            for var in POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB SECRET_KEY; do
               value=$(grep "^${var}=" .env.new | cut -d= -f2-)
               if [ -z "$value" ]; then
                 echo "Fehler: GitHub-Secret ${var} ist leer oder nicht angelegt."
@@ -82,6 +83,7 @@ jobs:
                 exit 1
               fi
             done
+            chmod 600 .env.new
             mv .env.new .env
 
             # 3. Docker-Container neu erzeugen und im Hintergrund starten
