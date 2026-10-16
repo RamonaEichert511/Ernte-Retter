@@ -75,7 +75,7 @@ jobs:
             curl -f http://localhost:8000/docs || exit 1
 
       - name: Invalidate CloudFront Cache
-        uses: chetan/cloudfront-invalidation-action@v2
+        uses: chetan/invalidate-cloudfront-action@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
