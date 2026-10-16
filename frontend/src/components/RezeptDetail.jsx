@@ -179,7 +179,7 @@ function RezeptDetail({ id, onZurueck, onFavoritEntfernt }) {
           <h3>Zubereitung</h3>
 
           {rezept.schritte.length > 0 ? (
-            <ol>
+            <ol style={{ listStyle: "none", paddingLeft: 0 }}>
               {rezept.schritte.map((schritt, index) => (
                 <li key={index}>{schritt}</li>
               ))}
