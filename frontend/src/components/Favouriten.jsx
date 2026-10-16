@@ -1,94 +1,127 @@
-import { useState, useEffect } from "react";
-import { api } from "../services/api";
+import { useEffect, useState } from "react";
+import { api, getToken } from "../services/api";
+import RezeptKarte from "./RezeptKarte";
+import RezeptDetail from "./RezeptDetail";
 
 function Favouriten() {
   const [favouriten, setFavouriten] = useState([]);
-  const [ladevorgang, setLadevorgang] = useState(true);
+  const [auswahl, setAuswahl] = useState(null);
+  const [laedt, setLaedt] = useState(true);
   const [fehler, setFehler] = useState("");
-  const [wirdEntfernt, setWirdEntfernt] = useState(null);
+  const [aktualisierung, setAktualisierung] = useState(0);
 
+  const angemeldet = Boolean(getToken());
+
+  // Gespeicherte Rezepte beim Öffnen und auf Klick laden.
   useEffect(() => {
-    let aktiv = true;
+    const controller = new AbortController();
 
-    const laden = async () => {
+    setFehler("");
+
+    if (!angemeldet) {
+      setFavouriten([]);
+      setLaedt(false);
+      return;
+    }
+
+    setLaedt(true);
+
+    async function laden() {
       try {
-        const daten = await api("/favoriten");
+        const daten = await api("/favoriten", {
+          signal: controller.signal,
+        });
 
-        if (aktiv) {
+        if (!controller.signal.aborted) {
           setFavouriten(daten);
         }
       } catch (error) {
-        console.error("Fehler beim Laden der Favoriten:", error);
-
-        if (aktiv) {
+        if (!controller.signal.aborted) {
           setFehler(
-            "Deine Favoriten konnten nicht geladen werden. Bitte prüfe, ob du angemeldet bist."
+            "Deine Favoriten konnten nicht geladen werden."
           );
         }
       } finally {
-        if (aktiv) {
-          setLadevorgang(false);
+        if (!controller.signal.aborted) {
+          setLaedt(false);
         }
       }
-    };
-
-    laden();
-
-    return () => {
-      aktiv = false;
-    };
-  }, []);
-
-  const entfernen = async (recipeId) => {
-    setWirdEntfernt(recipeId);
-    setFehler("");
-
-    try {
-      await api(`/favoriten/${recipeId}`, {
-        method: "DELETE",
-      });
-
-      setFavouriten((vorherige) =>
-        vorherige.filter((f) => f.recipe_id !== recipeId)
-      );
-    } catch (error) {
-      console.error("Fehler beim Entfernen des Favoriten:", error);
-      setFehler("Der Favorit konnte nicht entfernt werden.");
-    } finally {
-      setWirdEntfernt(null);
     }
-  };
+
+    void laden();
+
+    return () => controller.abort();
+  }, [angemeldet, aktualisierung]);
+
+  // Nach dem Entfernen auch die angezeigte Liste aktualisieren.
+  function favoritEntfernt(id) {
+    setFavouriten((vorherige) =>
+      vorherige.filter((rezept) => rezept.id !== id)
+    );
+  }
+
+  if (auswahl !== null) {
+    return (
+      <RezeptDetail
+        id={auswahl}
+        onZurueck={() => {
+          setAuswahl(null);
+          setAktualisierung((wert) => wert + 1);
+        }}
+        onFavoritEntfernt={favoritEntfernt}
+      />
+    );
+  }
 
   return (
     <section id="favouriten">
       <h2>❤️ Meine Favoriten</h2>
 
-      {fehler && <p role="alert">{fehler}</p>}
+      {!angemeldet ? (
+        <p>
+          <a href="#konto">Melde dich an</a>, um deine
+          Favoriten zu sehen.
+        </p>
+      ) : (
+        <>
+          <p>
+            <button
+              className="mein-button"
+              type="button"
+              disabled={laedt}
+              onClick={() =>
+                setAktualisierung((wert) => wert + 1)
+              }
+            >
+              {laedt
+                ? "Wird geladen …"
+                : "↻ Favoriten aktualisieren"}
+            </button>
+          </p>
 
-      <div id="favouriten-container">
-        {ladevorgang ? (
-          <p>Favoriten werden geladen... ⏳</p>
-        ) : favouriten.length === 0 ? (
-          !fehler && <p>Noch keine Favoriten gespeichert. 🤍</p>
-        ) : (
-          favouriten.map(({ recipe_id, title, image }) => (
-            <div className="rezept-karte" key={recipe_id}>
-              {image && <img src={image} alt={title} />}
-              <h3>{title}</h3>
+          {fehler && <p role="alert">{fehler}</p>}
 
-              <button
-                className="loeschen-button"
-                onClick={() => entfernen(recipe_id)}
-                disabled={wirdEntfernt !== null}
-              >
-                {wirdEntfernt === recipe_id
-                  ? "Wird entfernt..."
-                  : "🗑️ Entfernen"}
-              </button>
-            </div>
-          ))
-        )}
-      </div>
+          <div
+            id="favouriten-container"
+            aria-live="polite"
+            aria-busy={laedt}
+          >
+            {laedt ? (
+              <p>Favoriten werden geladen …</p>
+            ) : fehler ? null : favouriten.length === 0 ? (
+              <p>Noch keine Favoriten gespeichert. 🤍</p>
+            ) : (
+              favouriten.map((rezept) => (
+                <RezeptKarte
+                  key={rezept.id}
+                  recipe={rezept}
+                  onKlick={() => setAuswahl(rezept.id)}
+                />
+              ))
+            )}
+          </div>
+        </>
+      )}
     </section>
   );
 }

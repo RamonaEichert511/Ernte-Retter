@@ -1,9 +1,24 @@
 function RezeptKarte({ recipe, onKlick }) {
   return (
-    <div className="rezept-karte" onClick={onKlick}>
-      <img src={recipe.image} alt={recipe.title} />
+    <article className="rezept-karte">
+      {recipe.image_url && (
+        <img
+          src={recipe.image_url}
+          alt={recipe.title}
+          loading="lazy"
+        />
+      )}
+
       <h3>{recipe.title}</h3>
-    </div>
+
+      <button
+        className="mein-button"
+        type="button"
+        onClick={onKlick}
+      >
+        Rezept ansehen
+      </button>
+    </article>
   );
 }
 
