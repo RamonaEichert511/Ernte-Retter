@@ -49,6 +49,7 @@ from email_service import (
     mail_kontakt,
     mail_reserviert,
     mail_verifizierung,
+    offer_link,
     send_email,
 )
 
@@ -270,7 +271,9 @@ def reserve_offer(
             owner = conn.execute(
                 "SELECT email FROM users WHERE id = %s", (offer["owner_id"],)
             ).fetchone()
-            subject, body = mail_reserviert(offer["owner_name"], offer["title"])
+            subject, body = mail_reserviert(
+                offer["owner_name"], offer["title"], offer_link(offer_id)
+            )
             background_tasks.add_task(send_email, owner["email"], subject, body)
             return offer
         exists = conn.execute(
@@ -383,7 +386,7 @@ def send_nachricht(
                 "SELECT email FROM users WHERE id = %s", (partner,)
             ).fetchone()
             if empfaenger is not None:
-                subject, body = mail_kontakt(offer["title"])
+                subject, body = mail_kontakt(offer["title"], offer_link(offer_id))
                 background_tasks.add_task(
                     send_email, empfaenger["email"], subject, body
                 )
