@@ -3,8 +3,6 @@ services:
     image: postgres:15-alpine
     restart: always
     environment:
-      - MAIL_FROM=noreply@ernteretter.de
-      - AWS_REGION=eu-central-1
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ernteretter_passwort_123
       POSTGRES_DB: ernteretter
@@ -17,6 +15,9 @@ services:
     build: ./backend
     env_file:
       - .env
+    environment:
+      - MAIL_FROM=noreply@ernteretter.de
+      - AWS_REGION=eu-central-1
     ports:
       - "8000:8000"
     depends_on:
