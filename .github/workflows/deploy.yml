@@ -70,9 +70,19 @@ jobs:
             # 3. Docker-Container neu erzeugen und im Hintergrund starten
             docker compose up -d --build --force-recreate
 
-            # 4. Healthcheck durchführen
-            sleep 5
-            curl -f http://localhost:8000/docs || exit 1
+            # 4. Robuster Healthcheck mit Warteschleife (max. 60 Sekunden)
+            echo "Warte darauf, dass das Backend erreichbar ist..."
+            for i in {1..30}; do
+              if curl -s -f http://localhost:8000/docs > /dev/null; then
+                echo "Backend ist erreichbar und bereit!"
+                exit 0
+              fi
+              echo "Versuch $i/30: Backend bootet noch, warte 2 Sekunden..."
+              sleep 2
+            done
+
+            echo "Fehler: Backend hat nicht rechtzeitig geantwortet."
+            exit 1
 
       - name: Invalidate CloudFront Cache
         uses: chetan/invalidate-cloudfront-action@v2
