@@ -21,6 +21,10 @@ export async function api(path, options = {}) {
     path === "/me" ||
     path === "/aufgaben" ||
     path.startsWith("/aufgaben/") ||
+    path === "/wecker" ||
+    path.startsWith("/wecker/") ||
+    path === "/favoriten" ||
+    path.startsWith("/favoriten/") ||
     (path === "/offers" &&
       options.method?.toUpperCase() === "POST") ||
     /^\/offers\/[^/]+(?:\/reserve)?$/.test(path);
@@ -43,6 +47,7 @@ export async function api(path, options = {}) {
   }
 
   const response = await fetch(`${API_BASE}${path}`, {
+    cache: "no-store",
     ...options,
     headers,
   });

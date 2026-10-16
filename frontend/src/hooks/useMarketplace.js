@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   api,
   getToken,
@@ -29,6 +29,26 @@ async function refreshOffers() {
   const next = await api("/offers");
   setOffers(normalizeOffers(next));
 }
+  const refresh = useCallback(async () => {
+    setBusy(true);
+    setError("");
+
+    try {
+      const next = await api("/offers", {
+        cache: "no-store",
+      });
+
+      setOffers(normalizeOffers(next));
+      return true;
+    } catch {
+      setError(
+        "Die Inserate konnten nicht aktualisiert werden. Bitte versuche es erneut.",
+      );
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  }, []);
 useEffect(() => {
   let active = true;
 
@@ -195,7 +215,7 @@ function logout() {
     error,
     authenticate,
     logout,
-    refresh: () => perform("/offers", { method: "GET" }),
+    refresh,
     create: (values) =>
       perform("/offers", { method: "POST", body: JSON.stringify(values) }),
     reserve: (id) => perform(`/offers/${id}/reserve`, { method: "PUT" }),

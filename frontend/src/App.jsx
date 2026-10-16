@@ -44,19 +44,34 @@ function App() {
   const market = useMarketplace();
   useEffect(() => {
     const update = () => {
-      setActiveView(readView());
+      const nextView = readView();
+
+      setActiveView(nextView);
+      setFilter("alle");
+
+      // Alte Rezeptsuche beim Verlassen zurücksetzen.
+      if (nextView !== "rezepte") {
+        setSearchRequest(null);
+      }
+
+      // Beide Ansichten zeigen Inserate an.
+      if (nextView === "marktplatz" || nextView === "uebersicht") {
+        void market.refresh();
+      }
+
       window.scrollTo(0, 0);
+
       requestAnimationFrame(() =>
-        document.getElementById("main-content")?.focus({ preventScroll: true }),
+        document.getElementById("main-content")?.focus({
+          preventScroll: true,
+        }),
       );
     };
+
     window.addEventListener("hashchange", update);
+
     return () => window.removeEventListener("hashchange", update);
-  }, []);
-  function searchFromHero(query) {
-    setSearchRequest({ query, id: Date.now() });
-    window.location.hash = "rezepte";
-  }
+  }, [market.refresh]);
 
   // NEU: Tasks dauerhaft per Custom Hook speichern (Bonus-Aufgabe)
   const [tasks, setTasks] = useState([]);
@@ -66,7 +81,7 @@ function App() {
 
   setTasks([]);
 
-  if (!market.user) return;
+  if (!market.user || activeView !== "aufgaben") return;
 
   async function loadTasks() {
     try {
@@ -87,7 +102,7 @@ function App() {
   return () => {
     cancelled = true;
   };
-}, [market.user?.id]);
+}, [market.user?.id, activeView]);
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
@@ -172,7 +187,7 @@ function App() {
         user={market.user}
       />
       <div className="workspace">
-        <main id="main-content" tabIndex={-1}>
+        <main key={activeView} id="main-content" tabIndex={-1}>
           {market.error && (
             <p className="form-error" role="alert">
               {market.error}
@@ -181,9 +196,11 @@ function App() {
           {activeView === "uebersicht" && (
             <Home onSearch={searchFromHero} market={market} />
           )}
-          <div className="page-panel" hidden={activeView !== "rezepte"}>
-            <Rezepte searchRequest={searchRequest} />
-          </div>
+          {activeView === "rezepte" && (
+            <div className="page-panel">
+              <Rezepte searchRequest={searchRequest} />
+            </div>
+          )}
           {activeView === "ueber-mich" && (
             <div className="page-panel">
               <UeberMich />

@@ -102,3 +102,21 @@ Projektvorstellung: 21. Oktober 2026
     - Benutzernamen anzeigen im Inserat 
     - Benutzernamen anzeigen im  “Mein konto”  
 
+#### *15.Oktober*
+######  Bendix:
+  - Von veraltetem Python 3.10 auf 3.11 gewechselt, damit das websockets-Paket fehlerfrei durchläuft.
+  - Einen Dummy-Test (tests/test_app.py) ergänzt, damit pytest nicht mangels Testdateien mit Exit-Code 5 abbricht. -> 
+    Pipeline läuft stabil durch, synchronisiert via GitOps den AWS-Server, baut Docker neu, prüft den Health-Check und leert den CloudFront-Cache.
+
+
+######  Lee:
+  - favoriten und Wecker im backend gebaut
+
+######  Ramona:
+  - Dokumentation 
+  - Aktualisierung beim Wechsel zwischen den Seiten eingebaut.
+  - Aufgaben im Frontend an die Datenbank angebunden.
+  - Fehler bei den Inseraten behoben.
+  - Dropdown-Menüs für Menge und Einheit im Inserat hinzugefügt.
+  - Spoonacular-API entfernt. Künftig werden eigene, eingepflegte Rezepte abgerufen; diese Funktion wird noch ausgebaut.
+  - Footer angepasst und die Verlinkung zu „Über mich“ entfernt

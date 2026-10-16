@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import WeckerListe from "./WeckerListe";
+import { api } from "../services/api";
 
 const reifezeiten = {
   "saure gurken": 42,
@@ -24,11 +25,23 @@ function Vorratskammer() {
   const [sortierung, setSortierung] = useState("name");
 
   useEffect(() => {
-    const gespeichert = JSON.parse(localStorage.getItem("wecker") || "[]");
-    setVorratsListe(gespeichert);
+    const ladeWecker = async () => {
+      try {
+        const gespeichert = await api("/wecker");
+        setVorratsListe(gespeichert);
+      } catch (error) {
+        console.error("Fehler beim Laden der Wecker:", error);
+        setMeldung({
+          text: "Die gespeicherten Wecker konnten nicht geladen werden.",
+          typ: "warten",
+        });
+      }
+    };
+
+    ladeWecker();
   }, []);
 
-  const weckerStarten = () => {
+  const weckerStarten = async () => {
     const produktKlein = produkt.toLowerCase().trim();
 
     if (!produktKlein || !einlegedatum) {
@@ -66,24 +79,48 @@ function Vorratskammer() {
       });
     }
 
-    const neuerEintrag = {
-      produkt: produktKlein,
-      einlegedatum,
-      fertigAm: fertigAm.toISOString(),
-    };
+    try {
+      const neuerEintrag = await api("/wecker", {
+        method: "POST",
+        body: JSON.stringify({
+          produkt: produktKlein,
+          einlegedatum,
+          fertig_am: fertigAm.toISOString(),
+        }),
+      });
 
-    const aktualisiert = [...vorratsListe, neuerEintrag];
-    setVorratsListe(aktualisiert);
-    localStorage.setItem("wecker", JSON.stringify(aktualisiert));
+      setVorratsListe((bisherigeListe) => [
+        ...bisherigeListe,
+        neuerEintrag,
+      ]);
 
-    setProdukt("");
-    setEinlegedatum("");
+      setProdukt("");
+      setEinlegedatum("");
+    } catch (error) {
+      console.error("Fehler beim Speichern des Weckers:", error);
+      setMeldung({
+        text: "Der Wecker konnte nicht gespeichert werden. Bitte versuche es erneut.",
+        typ: "warten",
+      });
+    }
   };
 
-  const eintragLoeschen = (index) => {
-    const aktualisiert = vorratsListe.filter((_, i) => i !== index);
-    setVorratsListe(aktualisiert);
-    localStorage.setItem("wecker", JSON.stringify(aktualisiert));
+  const eintragLoeschen = async (id) => {
+    try {
+      await api(`/wecker/${id}`, {
+        method: "DELETE",
+      });
+
+      setVorratsListe((bisherigeListe) =>
+        bisherigeListe.filter((eintrag) => eintrag.id !== id)
+      );
+    } catch (error) {
+      console.error("Fehler beim Löschen des Weckers:", error);
+      setMeldung({
+        text: "Der Wecker konnte nicht gelöscht werden. Bitte versuche es erneut.",
+        typ: "warten",
+      });
+    }
   };
 
   return (

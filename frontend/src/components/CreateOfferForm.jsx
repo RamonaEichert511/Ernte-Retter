@@ -57,6 +57,7 @@ export default function CreateOfferForm({ onCreate, disabled }) {
             required
           />
         </label>
+      <div className="offer-quantity-group">
         <label htmlFor="offer-quantity">
             Menge *
             <input
@@ -88,7 +89,8 @@ export default function CreateOfferForm({ onCreate, disabled }) {
             <option value="Liter">Liter</option>
           </select>
         </label>
-
+      </div>
+      
         <label htmlFor="offer-location">
           Abholort *
           <input
