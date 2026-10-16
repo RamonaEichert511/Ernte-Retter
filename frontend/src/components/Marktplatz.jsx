@@ -1,10 +1,46 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import CreateOfferForm from "./CreateOfferForm";
 import OfferList from "./OfferList";
 import "./Marktplatz.css";
 export default function Marktplatz({ market }) {
   const [filter, setFilter] = useState("all");
   const [message, setMessage] = useState("");
+  const dialogRef = useRef(null);
+
+const [linkedOfferId, setLinkedOfferId] = useState(() =>
+  new URLSearchParams(window.location.search).get("offer"),
+);
+
+const linkedOffer = linkedOfferId
+  ? market.offers.find(
+      (offer) => String(offer.id) === linkedOfferId,
+    )
+  : null;
+
+useEffect(() => {
+  if (
+    !market.loading &&
+    linkedOffer &&
+    dialogRef.current &&
+    !dialogRef.current.open
+  ) {
+    dialogRef.current.showModal();
+  }
+}, [market.loading, linkedOffer]);
+
+function closeLinkedOffer() {
+  dialogRef.current?.close();
+  setLinkedOfferId(null);
+
+  const url = new URL(window.location.href);
+  url.searchParams.delete("offer");
+
+  window.history.replaceState(
+    window.history.state,
+    "",
+    `${url.pathname}${url.search}${url.hash}`,
+  );
+}
   async function action(operation, text) {
     setMessage("");
     const success = await operation();
