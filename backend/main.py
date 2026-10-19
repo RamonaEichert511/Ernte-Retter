@@ -45,6 +45,7 @@ from creation.schemas import (
     VerifyRequest,
     Wecker,
     WeckerCreate,
+    UserUpdate,
 )
 from database import db, init_db
 from email_service import (
@@ -76,7 +77,48 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["Authorization", "Content-Type"],
 )
+#--------- web socket class definition --------------
 
+# 1. Define the ConnectionManager class
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: dict[int, list[WebSocket]] = {}
+
+    async def connect(self, user_id: int, websocket: WebSocket):
+        await websocket.accept()
+        if user_id not in self.active_connections:
+            self.active_connections[user_id] = []
+        self.active_connections[user_id].append(websocket)
+
+    def disconnect(self, user_id: int, websocket: WebSocket):
+        if user_id in self.active_connections:
+            self.active_connections[user_id].remove(websocket)
+            if not self.active_connections[user_id]:
+                del self.active_connections[user_id]
+
+    async def send_personal_message(self, user_id: int, message: dict):
+        if user_id in self.active_connections:
+            for connection in self.active_connections[user_id]:
+                await connection.send_json(message)
+
+# 2. Instantiate the manager globally so it can be used everywhere in main.py
+manager = ConnectionManager()
+
+# -----------------jwt --------------------
+
+from jwt.exceptions import InvalidTokenError
+
+def get_user_from_token(token: str) -> Optional[dict]:
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = int(payload["sub"])
+    except (InvalidTokenError, KeyError, ValueError):
+        return None
+
+    with db() as conn:
+        return conn.execute(
+            "SELECT id, name, email FROM users WHERE id = %s", (user_id,)
+        ).fetchone()
 
 # ---------- Auth ----------
 
@@ -423,6 +465,7 @@ def send_nachricht(
             partner,
             {
                 "type": "new_message",
+                "id": row["id"],
                 "offer_id": offer_id,
                 "sender_id": me,
                 "text": text,
