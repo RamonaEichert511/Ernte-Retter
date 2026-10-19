@@ -49,6 +49,67 @@ const readView = () => {
   const [activeView, setActiveView] = useState(readView);
   const [searchRequest, setSearchRequest] = useState(null);
   const market = useMarketplace();
+  const [unreadMessages, setUnreadMessages] = useState(0);
+
+  useEffect(() => {
+    setUnreadMessages(0);
+
+    if (!market.user) return;
+
+    const controller = new AbortController();
+    let loading = false;
+
+    async function updateUnreadMessages() {
+      if (loading || controller.signal.aborted) return;
+
+      loading = true;
+
+      try {
+        const conversations = await api("/nachrichten/inbox", {
+          signal: controller.signal,
+        });
+
+        if (!controller.signal.aborted) {
+          const total = conversations.reduce(
+            (sum, conversation) => sum + conversation.ungelesen,
+            0,
+          );
+
+          setUnreadMessages(total);
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          console.error(
+            "Ungelesene Nachrichten konnten nicht geladen werden:",
+            error,
+          );
+        }
+    } finally {
+      loading = false;
+    }
+  }
+
+  updateUnreadMessages();
+
+  const interval = window.setInterval(updateUnreadMessages, 30000);
+
+  window.addEventListener("focus", updateUnreadMessages);
+  window.addEventListener(
+    "ernte-retter:messages-read",
+    updateUnreadMessages,
+  );
+
+  return () => {
+    controller.abort();
+    window.clearInterval(interval);
+
+    window.removeEventListener("focus", updateUnreadMessages);
+    window.removeEventListener(
+      "ernte-retter:messages-read",
+      updateUnreadMessages,
+    );
+  };
+}, [market.user?.id]);  
   const [chatTarget, setChatTarget] = useState(null);
 
   useEffect(() => {
@@ -218,6 +279,7 @@ const readView = () => {
         toggleDarkMode={toggleDarkMode}
         activeView={activeView}
         user={market.user}
+        unreadMessages={unreadMessages}
       />
       <div className="workspace">
         <main key={activeView} id="main-content" tabIndex={-1}>

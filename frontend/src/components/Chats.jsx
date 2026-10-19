@@ -76,6 +76,9 @@ export default function Chats({ user, initialConversation = null }) {
 
         if (!controller.signal.aborted) {
           setMessages(data);
+          window.dispatchEvent(
+            new Event("ernte-retter:messages-read"),
+          );
 
           setConversations((previous) =>
             previous.map((conversation) =>
