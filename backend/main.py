@@ -294,8 +294,8 @@ def withdraw_reservation(
     with db() as conn:
         row = conn.execute(
             "UPDATE offers SET status = 'verfügbar', reserved_by = NULL "
-            "WHERE id = %s AND reserved_by = %s RETURNING id",
-            (offer_id, current_user["id"]),
+            "WHERE id = %s AND (reserved_by = %s OR owner_id= %s) RETURNING id",
+            (offer_id, current_user["id"], current_user["id"]),
         ).fetchone()
         if row is not None:
             return conn.execute(
