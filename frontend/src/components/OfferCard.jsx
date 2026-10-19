@@ -1,3 +1,5 @@
+import { useState } from "react";
+import ProfilPopup from "./ProfilPopup";
 export default function OfferCard({
   offer,
   user,
@@ -7,6 +9,7 @@ export default function OfferCard({
   onDelete,
   onChat,
 }) {
+  const [profilOffen, setProfilOffen] = useState(false);
   const reserved = offer.status === "reserved";
  const own =
   user?.id != null &&
@@ -21,7 +24,16 @@ export default function OfferCard({
       <h3>{offer.title}</h3>
       {offer.owner_name && (
         <p className="form-hint">
-          Inserat ist von <strong>{offer.owner_name}</strong>
+          Inseriert von{" "}
+          <button
+            type="button"
+            className="profil-name-button"
+            onClick={() => setProfilOffen(true)}
+            aria-haspopup="dialog"
+            aria-label={`Profil von ${offer.owner_name} ansehen`}
+          >
+            {offer.owner_name}
+          </button>
         </p>
       )}
       <dl>
@@ -125,6 +137,12 @@ export default function OfferCard({
           <span className="form-hint">Bereits reserviert</span>
         )}
       </div>
+      {profilOffen && (
+        <ProfilPopup
+          name={offer.owner_name}
+          onClose={() => setProfilOffen(false)}
+        />
+      )}
     </article>
   );
 }
