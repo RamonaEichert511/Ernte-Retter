@@ -83,3 +83,42 @@
     flex-wrap: wrap;
   }
 }
+.profil-popup-inserate {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.profil-popup-inserate h3 {
+  margin: 0 0 16px;
+  color: var(--heading);
+}
+
+.profil-inserate-liste {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.profil-inserat {
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow-wrap: anywhere;
+}
+
+.profil-inserat h4 {
+  margin: 8px 0;
+  color: var(--heading);
+  font-size: 1.15rem;
+}
+
+.profil-inserat p {
+  margin: 6px 0;
+}
+
+.profil-inserat-beschreibung {
+  white-space: pre-wrap;
+}

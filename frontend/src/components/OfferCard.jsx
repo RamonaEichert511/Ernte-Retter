@@ -139,6 +139,7 @@ export default function OfferCard({
       </div>
       {profilOffen && (
         <ProfilPopup
+        userId={offer.owner_id}
           name={offer.owner_name}
           onClose={() => setProfilOffen(false)}
         />
