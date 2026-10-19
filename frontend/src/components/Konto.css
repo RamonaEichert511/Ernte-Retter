@@ -108,3 +108,68 @@
     grid-template-columns: 1fr;
   }
 }
+.konto-profil-aktionen {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.konto-profilformular {
+  display: grid;
+  gap: 18px;
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+}
+
+.konto-profilformular h3 {
+  margin: 0 0 10px;
+  color: var(--heading);
+}
+
+.konto-profilformular p {
+  margin: 0;
+}
+
+.konto-profilformular label {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.konto-profilformular input,
+.konto-profilformular textarea {
+  box-sizing: border-box;
+  width: 100%;
+  font: inherit;
+}
+
+.konto-ort-felder {
+  display: grid;
+  grid-template-columns: minmax(0, 150px) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.konto-textlaenge {
+  margin-top: -10px;
+  text-align: right;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.konto-profilformular button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .konto-profilformular {
+    padding: 20px;
+  }
+
+  .konto-ort-felder {
+    grid-template-columns: 1fr;
+  }
+}

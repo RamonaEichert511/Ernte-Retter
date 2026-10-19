@@ -1,8 +1,35 @@
+import { useState } from "react";
 import OfferList from "./OfferList";
 import "./Konto.css";
 
 export default function Konto({ market, onChat }) {
   const user = market.user;
+    const [profilBearbeiten, setProfilBearbeiten] = useState(false);
+
+  const [profilForm, setProfilForm] = useState({
+    wohnort: user.wohnort ?? "",
+    plz: user.plz ?? "",
+    ueber_mich: user.ueber_mich ?? "",
+  });
+
+  function profilOeffnen() {
+    setProfilForm({
+      wohnort: user.wohnort ?? "",
+      plz: user.plz ?? "",
+      ueber_mich: user.ueber_mich ?? "",
+    });
+
+    setProfilBearbeiten(true);
+  }
+
+  function profilAendern(event) {
+    const { name, value } = event.target;
+
+    setProfilForm((bisher) => ({
+      ...bisher,
+      [name]: value,
+    }));
+  }
 
   const eigeneInserate = market.offers.filter(
     (offer) => offer.owner_id === user.id,
@@ -44,15 +71,124 @@ export default function Konto({ market, onChat }) {
           <p>Dein Platz zum Teilen und Ernte retten.</p>
         </div>
 
-        <button
-          type="button"
-          className="secondary-button"
-          onClick={market.logout}
-          disabled={market.busy}
-        >
-          Abmelden
-        </button>
+        <div className="konto-profil-aktionen">
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={profilOeffnen}
+            disabled={market.busy || profilBearbeiten}
+            aria-expanded={profilBearbeiten}
+            aria-controls="konto-profilformular"
+          >
+            Profil bearbeiten
+          </button>
+
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={market.logout}
+            disabled={market.busy}
+          >
+            Abmelden
+          </button>
+        </div>
       </header>
+    {profilBearbeiten && (
+        <form
+          id="konto-profilformular"
+          className="konto-profilformular"
+          aria-labelledby="konto-profilformular-titel"
+          onSubmit={(event) => event.preventDefault()}
+        >
+          <div>
+            <h3 id="konto-profilformular-titel">
+              Dein öffentliches Profil
+            </h3>
+
+            <p className="form-hint" id="konto-profil-hinweis">
+              Diese Angaben sind freiwillig und werden in deinem
+              öffentlichen Profil angezeigt. Bitte trage keine
+              genaue Adresse ein.
+            </p>
+          </div>
+
+          <div className="konto-ort-felder">
+            <label htmlFor="konto-plz">
+              Postleitzahl
+              <input
+                id="konto-plz"
+                name="plz"
+                type="text"
+                inputMode="numeric"
+                autoComplete="postal-code"
+                pattern="[0-9]{5}"
+                maxLength={5}
+                placeholder="z. B. 23845"
+                value={profilForm.plz}
+                onChange={profilAendern}
+                aria-describedby="konto-profil-hinweis"
+              />
+            </label>
+
+            <label htmlFor="konto-wohnort">
+              Wohnort
+              <input
+                id="konto-wohnort"
+                name="wohnort"
+                type="text"
+                autoComplete="address-level2"
+                maxLength={100}
+                placeholder="z. B. Itzstedt"
+                value={profilForm.wohnort}
+                onChange={profilAendern}
+                aria-describedby="konto-profil-hinweis"
+              />
+            </label>
+          </div>
+
+          <label htmlFor="konto-ueber-mich">
+            Über mich
+            <textarea
+              id="konto-ueber-mich"
+              name="ueber_mich"
+              rows={5}
+              maxLength={1000}
+              placeholder="Was wächst bei dir? Was teilst oder tauschst du gerne?"
+              value={profilForm.ueber_mich}
+              onChange={profilAendern}
+              aria-describedby="konto-profil-hinweis konto-textlaenge"
+            />
+          </label>
+
+          <span id="konto-textlaenge" className="konto-textlaenge">
+            {profilForm.ueber_mich.length} / 1.000 Zeichen
+          </span>
+
+          <p className="form-hint" id="konto-speicher-hinweis">
+            Das Speichern ist noch nicht verfügbar. Deine Eingaben
+            werden bisher nicht gespeichert.
+          </p>
+
+          <div className="konto-profil-aktionen">
+            <button
+              type="submit"
+              className="mein-button"
+              disabled
+              aria-describedby="konto-speicher-hinweis"
+            >
+              Speichern
+            </button>
+
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => setProfilBearbeiten(false)}
+            >
+              Abbrechen
+            </button>
+          </div>
+        </form>
+    )}
 
       <div className="konto-zahlen">
         <a
