@@ -1,7 +1,7 @@
 import { useState } from "react";
-import Icon from "./Icon";
+import Konto from "./Konto";
 
-export default function Auth({ market }) {
+export default function Auth({ market, onChat }) {
   const [mode, setMode] = useState("login");
   const [form, setForm] = useState({ username: "",email: "",password: ""});
   const [error, setError] = useState("");
@@ -33,29 +33,9 @@ async function submit(e) {
 }
 
   if (market.loading) return <p role="status">Dein Konto wird geladen …</p>;
-  if (market.user)
-    return (
-      <section className="account-panel">
-        <span className="eyebrow">DEINE GARTENKÜCHE</span>
-        <h2>Hallo, {market.user.name}.</h2>
-        <p>Du bist angemeldet.</p>
-        <p>
-          Deine Inserate und Reservierungen findest du unter „Ernte teilen“.
-        </p>
-        <div className="account-actions">
-          <a className="mein-button" href="#marktplatz">
-            Zum Marktplatz <Icon name="arrow" />
-          </a>
-          <button
-            className="secondary-button"
-            onClick={market.logout}
-            disabled={market.busy}
-          >
-            Abmelden
-          </button>
-        </div>
-      </section>
-    );
+  if (market.user) {
+    return <Konto market={market} onChat={onChat} />;
+  }
   return (
     <section className="account-panel">
       <span className="eyebrow">GEMEINSAM ERNTE RETTEN</span>

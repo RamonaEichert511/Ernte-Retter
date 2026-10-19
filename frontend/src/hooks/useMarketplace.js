@@ -108,6 +108,104 @@ useEffect(() => {
     );
   };
 }, []);
+useEffect(() => {
+  if (!user?.id) return;
+
+  const activityKey = "ernte-retter-last-activity";
+  const idleLimit = 60 * 60 * 1000;
+  const events = ["pointerdown", "keydown", "scroll", "touchstart"];
+
+  let ended = false;
+  let lastSaved = 0;
+
+  // Bei bereits bestehender Anmeldung einmalig initialisieren.
+  if (!localStorage.getItem(activityKey)) {
+    localStorage.setItem(activityKey, String(Date.now()));
+  }
+
+  function endSession() {
+    if (ended) return;
+    ended = true;
+
+    clearToken();
+    localStorage.removeItem(activityKey);
+    setUser(null);
+    setError(
+      "Du wurdest nach 60 Minuten Inaktivität abgemeldet. Bitte melde dich erneut an.",
+    );
+    window.location.hash = "konto";
+  }
+
+  function checkSession() {
+    if (ended) return false;
+
+    // Berücksichtigt auch eine Abmeldung in einem anderen Tab.
+    if (!getToken()) {
+      endSession();
+      return false;
+    }
+
+    const lastActivity = Number(localStorage.getItem(activityKey));
+
+    if (
+      !Number.isFinite(lastActivity) ||
+      lastActivity <= 0 ||
+      Date.now() - lastActivity >= idleLimit
+    ) {
+      endSession();
+      return false;
+    }
+
+    return true;
+  }
+
+  function recordActivity(event) {
+    // Nur echte Bedienung zählt als Aktivität.
+    if (!event.isTrusted || !checkSession()) return;
+
+    const now = Date.now();
+
+    // Scrollen und Tippen erzeugen viele Ereignisse:
+    // höchstens einmal pro Sekunde speichern.
+    if (now - lastSaved < 1000) return;
+
+    lastSaved = now;
+    localStorage.setItem(activityKey, String(now));
+  }
+
+  function handleVisibility() {
+    if (document.visibilityState === "visible") {
+      checkSession();
+    }
+  }
+
+  events.forEach((event) => {
+    window.addEventListener(event, recordActivity, {
+      passive: true,
+      capture: true,
+    });
+  });
+
+  document.addEventListener("visibilitychange", handleVisibility);
+  window.addEventListener("focus", checkSession);
+  window.addEventListener("storage", checkSession);
+
+  checkSession();
+
+  const interval = window.setInterval(checkSession, 1000);
+
+  return () => {
+    window.clearInterval(interval);
+
+    events.forEach((event) => {
+      window.removeEventListener(event, recordActivity, true);
+    });
+
+    document.removeEventListener("visibilitychange", handleVisibility);
+    window.removeEventListener("focus", checkSession);
+    window.removeEventListener("storage", checkSession);
+  };
+}, [user?.id]);
 
 async function authenticate(mode, values) {
   setBusy(true);
@@ -152,6 +250,10 @@ const result = await api("/login", {
     }
 
     saveToken(result.access_token);
+    localStorage.setItem(
+      "ernte-retter-last-activity",
+      String(Date.now()),
+    );
 
     const me = await api("/me");
     setUser(me);
@@ -164,6 +266,7 @@ const result = await api("/login", {
 
 function logout() {
   clearToken();
+  localStorage.removeItem("ernte-retter-last-activity");
   setUser(null);
   setError("");
   window.location.hash = "konto";

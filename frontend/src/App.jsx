@@ -333,7 +333,7 @@ const readView = () => {
           
           {activeView === "konto" && (
             <div className="page-panel">
-              <Auth market={market} />
+              <Auth market={market} onChat={openChat} />
             </div>
           )}
           {activeView === "aufgaben" && (

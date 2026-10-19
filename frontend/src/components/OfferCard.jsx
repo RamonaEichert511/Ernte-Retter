@@ -55,23 +55,45 @@ export default function OfferCard({
           </button>
       )}
         {own ? (
-          <button
-            className="loeschen-button"
-            type="button"
-            disabled={busy}
-            onClick={() => {
-              if (
-                window.confirm(
-                  reserved
-                    ? "Für diese Ernte gibt es bereits eine Reservierung. Trotzdem löschen?"
-                    : "Möchtest du dein Inserat wirklich löschen?",
-                )
-              )
-                onDelete(offer.id);
-            }}
-          >
-            Inserat löschen
-          </button>
+          <>
+            {reserved && (
+              <button
+                className="secondary-button"
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      "Möchtest du die Reservierung aufheben? Deine Ernte ist danach wieder verfügbar.",
+                    )
+                  ) {
+                    onWithdraw(offer.id);
+                  }
+                }}
+              >
+                Reservierung aufheben
+              </button>
+            )}
+
+            <button
+              className="loeschen-button"
+              type="button"
+              disabled={busy}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    reserved
+                      ? "Für diese Ernte gibt es bereits eine Reservierung. Trotzdem löschen?"
+                      : "Möchtest du dein Inserat wirklich löschen?",
+                  )
+                ) {
+                  onDelete(offer.id);
+                }
+              }}
+            >
+              Inserat löschen
+            </button>
+          </>
         ) : myReservation ? (
           <>
            <span className="form-hint">Für dich reserviert</span>

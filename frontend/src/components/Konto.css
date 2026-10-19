@@ -1,0 +1,175 @@
+.konto {
+  display: grid;
+  gap: 28px;
+  min-width: 0;
+}
+
+.konto-profil {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 22px;
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+}
+
+.konto-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 78px;
+  height: 78px;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  color: var(--heading);
+  font-size: 1.7rem;
+  font-weight: 700;
+}
+
+.konto-begruessung {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.konto-begruessung h2 {
+  margin: 6px 0;
+}
+
+.konto-begruessung p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.konto-zahlen {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.konto-zahlen a {
+  display: grid;
+  gap: 6px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.konto-zahlen strong {
+  color: var(--heading);
+  font-size: 2rem;
+}
+
+.konto-zahlen span {
+  color: var(--muted);
+}
+
+.konto-bereich {
+  min-width: 0;
+  scroll-margin-top: 24px;
+}
+
+.konto-bereich-kopf {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.konto-bereich h3 {
+  color: var(--heading);
+}
+
+.konto-bereich-kopf h3 {
+  margin: 0;
+}
+
+.konto-leer {
+  padding: 24px;
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+  color: var(--muted);
+}
+
+@media (max-width: 600px) {
+  .konto-profil {
+    padding: 20px;
+    gap: 16px;
+  }
+
+  .konto-zahlen {
+    grid-template-columns: 1fr;
+  }
+}
+.konto-profil-aktionen {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.konto-profilformular {
+  display: grid;
+  gap: 18px;
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+}
+
+.konto-profilformular h3 {
+  margin: 0 0 10px;
+  color: var(--heading);
+}
+
+.konto-profilformular p {
+  margin: 0;
+}
+
+.konto-profilformular label {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.konto-profilformular input,
+.konto-profilformular textarea {
+  box-sizing: border-box;
+  width: 100%;
+  font: inherit;
+}
+
+.konto-ort-felder {
+  display: grid;
+  grid-template-columns: minmax(0, 150px) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.konto-textlaenge {
+  margin-top: -10px;
+  text-align: right;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.konto-profilformular button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .konto-profilformular {
+    padding: 20px;
+  }
+
+  .konto-ort-felder {
+    grid-template-columns: 1fr;
+  }
+}
