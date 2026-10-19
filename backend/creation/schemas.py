@@ -124,7 +124,10 @@ class RezeptCreate(BaseModel):
     title: str = Field(min_length=1)
     beschreibung: Optional[str] = None
     zutaten: list[str] = []
+    vorbereitung: Optional[str] = None
     schritte: list[str] = []
+    fertigstellung: Optional[str] = None
+    tipps: Optional[str] = None
     kategorie: Rezeptkategorie = "abendessen"
     image_url: Optional[str] = None
 
@@ -136,7 +139,10 @@ class Rezept(BaseModel):
     title: str
     beschreibung: Optional[str] = None
     zutaten: list[str]
+    vorbereitung: Optional[str] = None
     schritte: list[str]
+    fertigstellung: Optional[str] = None
+    tipps: Optional[str] = None
     kategorie: Rezeptkategorie
     image_url: Optional[str] = None
     created_at: datetime

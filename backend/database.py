@@ -1,283 +1,667 @@
+import hashlib
 import os
+import secrets
+from contextlib import asynccontextmanager
+from typing import Optional
 
-import psycopg
-from psycopg.rows import dict_row
+import psycopg.errors
+from fastapi import (
+    BackgroundTasks,
+    Depends,
+    FastAPI,
+    HTTPException,
+    Query,
+    status,
+)
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordRequestForm
 
-DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
-    raise RuntimeError(
-        "DATABASE_URL is not set, e.g. "
-        "postgresql://ernte_user:ernte_pass@db:5432/ernte_db"
+from auth import (
+    create_access_token,
+    get_current_user,
+    hash_password,
+    verify_password,
+)
+from creation.schemas import (
+    Aufgabe,
+    AufgabeCreate,
+    Favorit,
+    FavoritCreate,
+    Konversation,
+    Nachricht,
+    NachrichtCreate,
+    Offer,
+    OfferCreate,
+    Rezept,
+    RezeptCreate,
+    Rezeptkategorie,
+    ResendRequest,
+    Token,
+    UserCreate,
+    UserPublic,
+    VerifyRequest,
+    Wecker,
+    WeckerCreate,
+)
+from database import db, init_db
+from email_service import (
+    FRONTEND_URL,
+    mail_kontakt,
+    mail_reserviert,
+    mail_verifizierung,
+    offer_link,
+    send_email,
+)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
+
+
+app = FastAPI(title="Ernte-Retter API", lifespan=lifespan)
+
+origins = [
+    o.strip()
+    for o in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+    if o.strip()
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_methods=["*"],
+    allow_headers=["Authorization", "Content-Type"],
+)
+
+
+# ---------- Auth ----------
+
+
+def neues_token() -> tuple[str, str]:
+    """Return (token for the email link, hash to store in the database)."""
+    token = secrets.token_urlsafe(32)
+    return token, hashlib.sha256(token.encode()).hexdigest()
+
+
+@app.post(
+    "/register", response_model=UserPublic, status_code=status.HTTP_201_CREATED
+)
+def register(user: UserCreate, background_tasks: BackgroundTasks):
+    token, token_hash = neues_token()
+    with db() as conn:
+        try:
+            row = conn.execute(
+                "INSERT INTO users "
+                "(name, email, password_hash, email_verified, "
+                "verify_token_hash, verify_expires) "
+                "VALUES (%s, %s, %s, FALSE, %s, NOW() + INTERVAL '24 hours') "
+                "RETURNING id, name, email",
+                (
+                    user.name.strip(),
+                    user.email.lower(),
+                    hash_password(user.password),
+                    token_hash,
+                ),
+            ).fetchone()
+        except psycopg.errors.UniqueViolation:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Email is already registered",
+            )
+    subject, body = mail_verifizierung(
+        row["name"], f"{FRONTEND_URL}/verify?token={token}"
+    )
+    background_tasks.add_task(send_email, row["email"], subject, body)
+    return row
+
+
+@app.post("/verify-email", status_code=status.HTTP_204_NO_CONTENT)
+def verify_email(data: VerifyRequest):
+    token_hash = hashlib.sha256(data.token.encode()).hexdigest()
+    with db() as conn:
+        row = conn.execute(
+            "UPDATE users SET email_verified = TRUE, "
+            "verify_token_hash = NULL, verify_expires = NULL "
+            "WHERE verify_token_hash = %s AND verify_expires > NOW() "
+            "RETURNING id",
+            (token_hash,),
+        ).fetchone()
+        if row is None:
+            raise HTTPException(
+                status_code=400, detail="Link ungültig oder abgelaufen"
+            )
+
+
+@app.post("/resend-verification", status_code=status.HTTP_202_ACCEPTED)
+def resend_verification(data: ResendRequest, background_tasks: BackgroundTasks):
+    token, token_hash = neues_token()
+    with db() as conn:
+        row = conn.execute(
+            "UPDATE users SET verify_token_hash = %s, "
+            "verify_expires = NOW() + INTERVAL '24 hours' "
+            "WHERE email = %s AND NOT email_verified RETURNING name, email",
+            (token_hash, data.email.lower()),
+        ).fetchone()
+    if row is not None:
+        subject, body = mail_verifizierung(
+            row["name"], f"{FRONTEND_URL}/verify?token={token}"
+        )
+        background_tasks.add_task(send_email, row["email"], subject, body)
+    # same answer whether or not the account exists
+    return {
+        "detail": "Falls ein unbestätigtes Konto existiert, "
+        "wurde eine E-Mail gesendet."
+    }
+
+
+@app.post("/login", response_model=Token)
+def login(data: OAuth2PasswordRequestForm = Depends()):
+    with db() as conn:
+        row = conn.execute(
+            "SELECT id, password_hash, email_verified FROM users "
+            "WHERE email = %s",
+            (data.username.lower(),),
+        ).fetchone()
+
+    if row is None or not verify_password(
+        data.password,
+        row["password_hash"],
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Benutzername oder Passwort ist falsch",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not row["email_verified"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="E-Mail-Adresse ist noch nicht bestätigt",
+        )
+
+    return {
+        "access_token": create_access_token(row["id"]),
+        "token_type": "bearer",
+    }
+
+
+@app.get("/me", response_model=UserPublic)
+def get_me(current_user: UserPublic = Depends(get_current_user)):
+    return current_user
+
+
+# ---------- Offers (Ernte teilen) ----------
+
+
+OFFER_SELECT = (
+    "SELECT o.*, u.name AS owner_name "
+    "FROM offers o JOIN users u ON u.id = o.owner_id "
+)
+
+
+@app.get("/offers", response_model=list[Offer])
+def list_offers():
+    with db() as conn:
+        return conn.execute(
+            OFFER_SELECT + "ORDER BY o.created_at DESC"
+        ).fetchall()
+
+
+@app.post("/offers", response_model=Offer)
+def create_offer(
+    data: OfferCreate, current_user: dict = Depends(get_current_user)
+):
+    with db() as conn:
+        new = conn.execute(
+            "INSERT INTO offers "
+            "(title, description, menge, einheit, location, owner_id) "
+            "VALUES (%s, %s, %s, %s, %s, %s) RETURNING id",
+            (
+                data.title,
+                data.description,
+                data.menge,
+                data.einheit,
+                data.location,
+                current_user["id"],
+            ),
+        ).fetchone()
+        return conn.execute(
+            OFFER_SELECT + "WHERE o.id = %s", (new["id"],)
+        ).fetchone()
+
+
+@app.delete("/offers/{offer_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_offer(
+    offer_id: int, current_user: dict = Depends(get_current_user)
+):
+    with db() as conn:
+        row = conn.execute(
+            "DELETE FROM offers WHERE id = %s AND owner_id = %s RETURNING id",
+            (offer_id, current_user["id"]),
+        ).fetchone()
+        if row is not None:
+            return
+        exists = conn.execute(
+            "SELECT 1 FROM offers WHERE id = %s", (offer_id,)
+        ).fetchone()
+        if exists is None:
+            raise HTTPException(status_code=404, detail="Offer not found")
+        raise HTTPException(
+            status_code=403, detail="You do not own this offer"
+        )
+
+
+@app.put("/offers/{offer_id}/reserve", response_model=Offer)
+def reserve_offer(
+    offer_id: int,
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_user),
+):
+    with db() as conn:
+        row = conn.execute(
+            "UPDATE offers SET status = 'reserviert', reserved_by = %s "
+            "WHERE id = %s AND status = 'verfügbar' RETURNING id",
+            (current_user["id"], offer_id),
+        ).fetchone()
+        if row is not None:
+            offer = conn.execute(
+                OFFER_SELECT + "WHERE o.id = %s", (offer_id,)
+            ).fetchone()
+            owner = conn.execute(
+                "SELECT email FROM users WHERE id = %s", (offer["owner_id"],)
+            ).fetchone()
+            subject, body = mail_reserviert(
+                offer["owner_name"], offer["title"], offer_link(offer_id)
+            )
+            background_tasks.add_task(send_email, owner["email"], subject, body)
+            return offer
+        exists = conn.execute(
+            "SELECT 1 FROM offers WHERE id = %s", (offer_id,)
+        ).fetchone()
+        if exists is None:
+            raise HTTPException(status_code=404, detail="Offer not found")
+        raise HTTPException(
+            status_code=409, detail="Offer is already reserved"
+        )
+
+
+@app.delete("/offers/{offer_id}/reserve", response_model=Offer)
+def withdraw_reservation(
+    offer_id: int, current_user: dict = Depends(get_current_user)
+):
+    with db() as conn:
+        row = conn.execute(
+            "UPDATE offers SET status = 'verfügbar', reserved_by = NULL "
+            "WHERE id = %s AND reserved_by = %s RETURNING id",
+            (offer_id, current_user["id"]),
+        ).fetchone()
+        if row is not None:
+            return conn.execute(
+                OFFER_SELECT + "WHERE o.id = %s", (offer_id,)
+            ).fetchone()
+        exists = conn.execute(
+            "SELECT 1 FROM offers WHERE id = %s", (offer_id,)
+        ).fetchone()
+        if exists is None:
+            raise HTTPException(status_code=404, detail="Offer not found")
+        raise HTTPException(
+            status_code=403, detail="You have not reserved this offer"
+        )
+
+
+# ---------- Nachrichten (Chat) ----------
+#
+# A conversation is always between the owner of an offer and one other
+# person. The other person starts it; the owner can answer (or write to
+# whoever reserved the offer).
+
+
+def _zwischen(offer_id: int, a: int, b: int):
+    """SQL condition and params for messages between users a and b."""
+    return (
+        "offer_id = %s AND ((sender_id = %s AND recipient_id = %s) "
+        "OR (sender_id = %s AND recipient_id = %s))",
+        (offer_id, a, b, b, a),
     )
 
 
-def db():
-    """Open a connection for use in a `with` block.
-
-    On success the transaction is committed, on an exception it is rolled
-    back, and the connection is closed either way.
-    """
-    return psycopg.connect(DATABASE_URL, row_factory=dict_row)
-
-
-def init_db():
+@app.post(
+    "/offers/{offer_id}/nachrichten",
+    response_model=Nachricht,
+    status_code=status.HTTP_201_CREATED,
+)
+def send_nachricht(
+    offer_id: int,
+    data: NachrichtCreate,
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_user),
+):
+    me = current_user["id"]
+    text = data.text.strip()
+    if not text:
+        raise HTTPException(status_code=422, detail="Nachricht ist leer")
     with db() as conn:
-        # ---------- users ----------
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                name TEXT NOT NULL,
-                email TEXT NOT NULL,
-                password_hash TEXT NOT NULL,
-                email_verified BOOLEAN NOT NULL DEFAULT FALSE,
-                verify_token_hash TEXT,
-                verify_expires TIMESTAMPTZ,
-                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            )
-            """
-        )
-        # for databases where the users table already existed: accounts
-        # created before email verification count as verified, so nobody
-        # is locked out. New registrations set the value explicitly.
-        conn.execute(
-            "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified "
-            "BOOLEAN NOT NULL DEFAULT TRUE"
-        )
-        conn.execute(
-            "ALTER TABLE users ADD COLUMN IF NOT EXISTS verify_token_hash TEXT"
-        )
-        conn.execute(
-            "ALTER TABLE users ADD COLUMN IF NOT EXISTS verify_expires "
-            "TIMESTAMPTZ"
-        )
-        # one account per email, regardless of upper/lower case
-        conn.execute(
-            "CREATE UNIQUE INDEX IF NOT EXISTS users_email_lower_idx "
-            "ON users (LOWER(email))"
-        )
-
-        # ---------- offers (Ernte teilen) ----------
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS offers (
-                id SERIAL PRIMARY KEY,
-                title TEXT NOT NULL,
-                description TEXT NULL,
-                status TEXT NOT NULL DEFAULT 'verfügbar',
-                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-                owner_id INTEGER NOT NULL REFERENCES users(id),
-                reserved_by INTEGER REFERENCES users(id),
-                menge NUMERIC(10, 2) NOT NULL DEFAULT 1,
-                einheit TEXT NOT NULL DEFAULT 'Stück',
-                location TEXT NOT NULL DEFAULT ''
-            )
-            """
-        )
-        # for databases where the offers table already existed
-        conn.execute(
-            "ALTER TABLE offers ADD COLUMN IF NOT EXISTS menge "
-            "NUMERIC(10, 2) NOT NULL DEFAULT 1"
-        )
-        conn.execute(
-            "ALTER TABLE offers ALTER COLUMN menge TYPE NUMERIC(10, 2)"
-        )
-        conn.execute(
-            "ALTER TABLE offers ADD COLUMN IF NOT EXISTS einheit "
-            "TEXT NOT NULL DEFAULT 'Stück'"
-        )
-        conn.execute(
-            "ALTER TABLE offers ADD COLUMN IF NOT EXISTS location "
-            "TEXT NOT NULL DEFAULT ''"
-        )
-
-        # ---------- nachrichten (chat about an offer) ----------
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS nachrichten (
-                id SERIAL PRIMARY KEY,
-                offer_id INTEGER NOT NULL REFERENCES offers(id) ON DELETE CASCADE,
-                sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                recipient_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                text TEXT NOT NULL,
-                gelesen BOOLEAN NOT NULL DEFAULT FALSE,
-                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            )
-            """
-        )
-        conn.execute(
-            "CREATE INDEX IF NOT EXISTS nachrichten_offer_idx "
-            "ON nachrichten (offer_id, created_at)"
-        )
-
-        # ---------- aufgaben ----------
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS aufgaben (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                title TEXT NOT NULL,
-                priority TEXT NOT NULL DEFAULT 'mittel',
-                kategorie TEXT NOT NULL DEFAULT 'allgemein',
-                done BOOLEAN NOT NULL DEFAULT FALSE,
-                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            )
-            """
-        )
-        # for databases where the aufgaben table already existed
-        conn.execute(
-            "ALTER TABLE aufgaben ADD COLUMN IF NOT EXISTS priority "
-            "TEXT NOT NULL DEFAULT 'mittel'"
-        )
-        conn.execute(
-            "ALTER TABLE aufgaben ADD COLUMN IF NOT EXISTS kategorie "
-            "TEXT NOT NULL DEFAULT 'allgemein'"
-        )
-
-        # ---------- rezepte (own recipes, German) ----------
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS rezepte (
-                id SERIAL PRIMARY KEY,
-                owner_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-                title TEXT NOT NULL,
-                beschreibung TEXT,
-                zutaten TEXT[] NOT NULL DEFAULT '{}',
-                schritte TEXT[] NOT NULL DEFAULT '{}',
-                kategorie TEXT NOT NULL DEFAULT 'abendessen',
-                image_url TEXT,
-                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            )
-            """
-        )
-
-        # ---------- favoriten (must come after rezepte) ----------
-        # One-time migration: an old favoriten table (Spoonacular ids, no
-        # link to rezepte) is dropped and recreated below. Once the table
-        # has the foreign key, this check never drops it again.
-        favoriten_vorhanden = conn.execute(
-            "SELECT to_regclass('favoriten') IS NOT NULL AS vorhanden"
-        ).fetchone()["vorhanden"]
-        hat_verweis = conn.execute(
-            "SELECT 1 FROM pg_constraint "
-            "WHERE conrelid = to_regclass('favoriten') "
-            "AND confrelid = to_regclass('rezepte')"
+        offer = conn.execute(
+            "SELECT id, title, owner_id, reserved_by FROM offers WHERE id = %s",
+            (offer_id,),
         ).fetchone()
-        if favoriten_vorhanden and hat_verweis is None:
-            conn.execute("DROP TABLE favoriten")
+        if offer is None:
+            raise HTTPException(status_code=404, detail="Offer not found")
 
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS favoriten (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                recipe_id INTEGER NOT NULL REFERENCES rezepte(id) ON DELETE CASCADE,
-                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-                UNIQUE (user_id, recipe_id)
-            )
-            """
-        )
-
-        # ---------- wecker (Vorratskammer) ----------
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS wecker (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                produkt TEXT NOT NULL,
-                einlegedatum DATE NOT NULL,
-                fertig_am TIMESTAMPTZ NOT NULL,
-                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            )
-            """
-        )
-
-        # ---------- Startrezepte ----------
-        startrezepte = [
-            (
-                "Saure Gurken",
-                "Klassisch eingelegt, nach ein paar Wochen perfekt.",
-                [
-                    "1 kg kleine Gurken",
-                    "1 l Wasser",
-                    "50 g Salz",
-                    "Dill",
-                    "Senfkörner",
-                ],
-                [
-                    "Gurken waschen und in Gläser schichten.",
-                    "Wasser mit Salz aufkochen und abkühlen lassen.",
-                    "Dill und Senfkörner zugeben, Lake über die Gurken gießen.",
-                    "Gläser verschließen und mindestens 4 Wochen dunkel lagern.",
-                ],
-                "haltbarmachen",
-            ),
-            (
-                "Kürbissuppe",
-                "Cremige Suppe für den Herbst.",
-                [
-                    "1 Hokkaido-Kürbis",
-                    "1 Zwiebel",
-                    "700 ml Gemüsebrühe",
-                    "200 ml Sahne",
-                ],
-                [
-                    "Kürbis und Zwiebel würfeln und anbraten.",
-                    "Mit Brühe ablöschen und 20 Minuten köcheln.",
-                    "Pürieren, Sahne zugeben und abschmecken.",
-                ],
-                "abendessen",
-            ),
-            (
-                "Tomaten soße",
-                "Leckere Tomatensoße ",
-                [
-                    "1200 g Tomaten",
-                    "1 Zwiebel, rot fein gehackt",
-                    "2 Knoblauchzehen fein gehackt",
-                    "2EL Olivenöl",
-                    "50 g Tomatenmark",
-                    "1 TL Salz",
-                    "1 TL Rohrohrzucker oder weißer Zucker",
-                    "1 TL Paprika rosenscharf oder milder Paprika oder Chilipulver",
-                    "1 Handvoll frische oder getrocknete Kräuter z.B. Basilikum, Oregano, Thymian"
-                ],
-                [
-                    "Vorbereitung",
-                    "Zwiebel und Knoblauch schälen und fein hacken. Tomaten vierteln, den Blütenansatz herausschneiden und dann in Stücke schneiden. Alle übrigen Zutaten bereitstellen.",
-                    "1200 g Tomaten | 1 Zwiebel, rot | 2 Knoblauchzehen",
-                    "Gläser säubern und heiß ausspülen, ebenso die Deckel und den Einfülltrichter (falls vorhanden).",
-                    "Zubereitung",
-                    "1. In einem großen Topf oder Pfanne Öl erhitzen und die Zwiebeln darin abraten. Knoblauch kurz mit anschwitzen, Tomatenmark hinzufügen und kurz mitbraten.",
-                    "2 EL Olivenöl | 50 g Tomatenmark",
-                    "2. Nun die Tomatenstücke zugeben und mit Salz, Paprikapulver und Zucker würzen, aufkochen und dann 30 Minuten zugedeckt köcheln lassen. Die kleingeschnittenen Kräuter 5 Minuten vor Ende zugeben.",
-                    "1 TL Salz | 1 TL Rohrohrzucker | 1 TL Paprika rosenscharf | 1 Handvoll frische oder getrocknete Kräuter",
-                    "3. Kurz abkühlen, dann kommt die Tomatensoße in den Mixer und wird einmal kräftig durchgemixt, damit keine Schalenstücke zurückbleiben. (Alternativ mit dem Pürierstab mixen). Dann gehts zurück in den Topf und nochmals kurz aufkochen lassen. Ggf. nochmals abschmecken.",
-                    "Fertigstellung",
-                    "Ofen auf 100 Grad Umluft vorheizen.",
-                    "Die heiße Tomatensoße in die Gläser füllen, dabei auf saubere Ränder achten und sofort verschließen.",
-                    "Gläser in eine Auflaufform oder in die tiefe Fettpfanne stellen (sie sollen sich nicht berühren). In den heißen Ofen schieben, 2-3 cm hoch heißes Wasser zugießen und mindestens 30 Minuten bei 100 Grad im Ofen einkochen. ",
-                    "Beim Abkühlen bildet sich ein Vakuum. Das erkennst du daran, dass sich der Deckel etwas einzieht und bei Berührung weder knackt noch nachgibt. Damit ist die Tomatensoße mindestens 1 Jahr haltbar.",
-                    "Fülle die Tomatensoße in unterschiedlich große Gläser, dann hast du für verschiedene Gerichte immer die richtige Menge zur Hand. Außerdem ist selbstgemachte Tomatensoße ein beliebtes Gastgeschenk, wenn du eingeladen bist."
-                ],
-                "haltbarmachen"
-            )
-        ]
-
-        # Gleichzeitige Starts dürfen keine doppelten Rezepte anlegen.
-        conn.execute("LOCK TABLE rezepte IN SHARE ROW EXCLUSIVE MODE")
-
-        for rezept in startrezepte:
-            conn.execute(
-                """
-                INSERT INTO rezepte
-                    (title, beschreibung, zutaten, schritte, kategorie)
-                SELECT %s, %s, %s, %s, %s
-                WHERE NOT EXISTS (
-                    SELECT 1
-                    FROM rezepte
-                    WHERE title = %s AND owner_id IS NULL
+        if me == offer["owner_id"]:
+            partner = data.an
+            if partner is None or partner == me:
+                raise HTTPException(
+                    status_code=422, detail="Empfänger fehlt"
                 )
-                """,
-                (*rezept, rezept[0]),
-            )
+            hat_geschrieben = conn.execute(
+                "SELECT 1 FROM nachrichten WHERE offer_id = %s "
+                "AND sender_id = %s AND recipient_id = %s LIMIT 1",
+                (offer_id, partner, me),
+            ).fetchone()
+            if hat_geschrieben is None and offer["reserved_by"] != partner:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Du kannst nur Personen anschreiben, "
+                    "die sich gemeldet oder reserviert haben",
+                )
+        else:
+            partner = offer["owner_id"]
+
+        bedingung, params = _zwischen(offer_id, me, partner)
+        bisher = conn.execute(
+            f"SELECT 1 FROM nachrichten WHERE {bedingung} LIMIT 1", params
+        ).fetchone()
+
+        row = conn.execute(
+            "INSERT INTO nachrichten (offer_id, sender_id, recipient_id, text) "
+            "VALUES (%s, %s, %s, %s) RETURNING *",
+            (offer_id, me, partner, text),
+        ).fetchone()
+
+        # email only for the first message of a conversation
+        if bisher is None:
+            empfaenger = conn.execute(
+                "SELECT email FROM users WHERE id = %s", (partner,)
+            ).fetchone()
+            if empfaenger is not None:
+                subject, body = mail_kontakt(offer["title"], offer_link(offer_id))
+                background_tasks.add_task(
+                    send_email, empfaenger["email"], subject, body
+                )
+        return row
+
+
+@app.get("/offers/{offer_id}/nachrichten", response_model=list[Nachricht])
+def list_nachrichten(
+    offer_id: int,
+    mit: Optional[int] = None,
+    current_user: dict = Depends(get_current_user),
+):
+    me = current_user["id"]
+    with db() as conn:
+        offer = conn.execute(
+            "SELECT owner_id FROM offers WHERE id = %s", (offer_id,)
+        ).fetchone()
+        if offer is None:
+            raise HTTPException(status_code=404, detail="Offer not found")
+        if mit is None:
+            if me == offer["owner_id"]:
+                raise HTTPException(
+                    status_code=422, detail="Parameter 'mit' fehlt"
+                )
+            mit = offer["owner_id"]
+
+        bedingung, params = _zwischen(offer_id, me, mit)
+        rows = conn.execute(
+            f"SELECT * FROM nachrichten WHERE {bedingung} "
+            "ORDER BY created_at, id",
+            params,
+        ).fetchall()
+        conn.execute(
+            "UPDATE nachrichten SET gelesen = TRUE WHERE offer_id = %s "
+            "AND sender_id = %s AND recipient_id = %s AND NOT gelesen",
+            (offer_id, mit, me),
+        )
+        return rows
+
+
+@app.get("/nachrichten/inbox", response_model=list[Konversation])
+def inbox(current_user: dict = Depends(get_current_user)):
+    me = current_user["id"]
+    with db() as conn:
+        rows = conn.execute(
+            "WITH k AS ("
+            "  SELECT n.*, CASE WHEN n.sender_id = %s "
+            "    THEN n.recipient_id ELSE n.sender_id END AS partner_id "
+            "  FROM nachrichten n "
+            "  WHERE n.sender_id = %s OR n.recipient_id = %s"
+            ") "
+            "SELECT DISTINCT ON (k.offer_id, k.partner_id) "
+            "  k.offer_id, o.title AS offer_title, k.partner_id, "
+            "  u.name AS partner_name, k.text AS letzte_nachricht, "
+            "  k.created_at AS letzte_zeit, "
+            "  (SELECT COUNT(*) FROM nachrichten x "
+            "   WHERE x.offer_id = k.offer_id AND x.sender_id = k.partner_id "
+            "   AND x.recipient_id = %s AND NOT x.gelesen)::int AS ungelesen "
+            "FROM k JOIN offers o ON o.id = k.offer_id "
+            "JOIN users u ON u.id = k.partner_id "
+            "ORDER BY k.offer_id, k.partner_id, k.created_at DESC",
+            (me, me, me, me),
+        ).fetchall()
+    return sorted(rows, key=lambda r: r["letzte_zeit"], reverse=True)
+
+
+# ---------- Aufgaben ----------
+
+
+@app.get("/aufgaben", response_model=list[Aufgabe])
+def list_aufgaben(current_user: dict = Depends(get_current_user)):
+    with db() as conn:
+        return conn.execute(
+            "SELECT * FROM aufgaben WHERE user_id = %s ORDER BY created_at",
+            (current_user["id"],),
+        ).fetchall()
+
+
+@app.post("/aufgaben", response_model=Aufgabe)
+def create_aufgabe(
+    data: AufgabeCreate, current_user: dict = Depends(get_current_user)
+):
+    with db() as conn:
+        return conn.execute(
+            "INSERT INTO aufgaben (user_id, title, priority, kategorie) "
+            "VALUES (%s, %s, %s, %s) RETURNING *",
+            (current_user["id"], data.title, data.priority, data.kategorie),
+        ).fetchone()
+
+
+@app.put("/aufgaben/{aufgabe_id}/toggle", response_model=Aufgabe)
+def toggle_aufgabe(
+    aufgabe_id: int, current_user: dict = Depends(get_current_user)
+):
+    with db() as conn:
+        row = conn.execute(
+            "UPDATE aufgaben SET done = NOT done "
+            "WHERE id = %s AND user_id = %s RETURNING *",
+            (aufgabe_id, current_user["id"]),
+        ).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="Aufgabe not found")
+        return row
+
+
+@app.delete("/aufgaben/{aufgabe_id}", status_code=204)
+def delete_aufgabe(
+    aufgabe_id: int, current_user: dict = Depends(get_current_user)
+):
+    with db() as conn:
+        row = conn.execute(
+            "DELETE FROM aufgaben WHERE id = %s AND user_id = %s RETURNING id",
+            (aufgabe_id, current_user["id"]),
+        ).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="Aufgabe not found")
+
+
+# ---------- Rezepte ----------
+
+
+REZEPT_SELECT = (
+    "SELECT r.*, u.name AS owner_name "
+    "FROM rezepte r LEFT JOIN users u ON u.id = r.owner_id "
+)
+
+
+@app.get("/rezepte", response_model=list[Rezept])
+def list_rezepte(kategorie: Optional[Rezeptkategorie] = Query(default=None)):
+    with db() as conn:
+        if kategorie:
+            return conn.execute(
+                REZEPT_SELECT
+                + "WHERE r.kategorie = %s ORDER BY r.created_at DESC",
+                (kategorie,),
+            ).fetchall()
+        return conn.execute(
+            REZEPT_SELECT + "ORDER BY r.created_at DESC"
+        ).fetchall()
+
+
+@app.get("/rezepte/{rezept_id}", response_model=Rezept)
+def get_rezept(rezept_id: int):
+    with db() as conn:
+        row = conn.execute(
+            REZEPT_SELECT + "WHERE r.id = %s", (rezept_id,)
+        ).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="Rezept not found")
+        return row
+
+
+@app.post("/rezepte", response_model=Rezept, status_code=201)
+def create_rezept(
+    data: RezeptCreate, current_user: dict = Depends(get_current_user)
+):
+    with db() as conn:
+        new = conn.execute(
+            "INSERT INTO rezepte "
+            "(owner_id, title, beschreibung, zutaten, vorbereitung, schritte, "
+            "fertigstellung, tipps, kategorie, image_url) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id",
+            (
+                current_user["id"],
+                data.title,
+                data.beschreibung,
+                data.zutaten,
+                data.vorbereitung,
+                data.schritte,
+                data.fertigstellung,
+                data.tipps,
+                data.kategorie,
+                data.image_url,
+            ),
+        ).fetchone()
+        return conn.execute(
+            REZEPT_SELECT + "WHERE r.id = %s", (new["id"],)
+        ).fetchone()
+
+
+@app.delete("/rezepte/{rezept_id}", status_code=204)
+def delete_rezept(
+    rezept_id: int, current_user: dict = Depends(get_current_user)
+):
+    with db() as conn:
+        row = conn.execute(
+            "DELETE FROM rezepte WHERE id = %s AND owner_id = %s RETURNING id",
+            (rezept_id, current_user["id"]),
+        ).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="Rezept not found")
+
+
+# ---------- Favoriten ----------
+
+
+@app.get("/favoriten", response_model=list[Rezept])
+def list_favoriten(current_user: dict = Depends(get_current_user)):
+    with db() as conn:
+        return conn.execute(
+            "SELECT r.*, u.name AS owner_name FROM favoriten f "
+            "JOIN rezepte r ON r.id = f.recipe_id "
+            "LEFT JOIN users u ON u.id = r.owner_id "
+            "WHERE f.user_id = %s ORDER BY f.created_at",
+            (current_user["id"],),
+        ).fetchall()
+
+
+@app.post("/favoriten", response_model=Favorit)
+def add_favorit(
+    data: FavoritCreate, current_user: dict = Depends(get_current_user)
+):
+    with db() as conn:
+        try:
+            return conn.execute(
+                "INSERT INTO favoriten (user_id, recipe_id) VALUES (%s, %s) "
+                "ON CONFLICT (user_id, recipe_id) "
+                "DO UPDATE SET recipe_id = EXCLUDED.recipe_id RETURNING *",
+                (current_user["id"], data.recipe_id),
+            ).fetchone()
+        except psycopg.errors.ForeignKeyViolation:
+            raise HTTPException(status_code=404, detail="Rezept not found")
+
+
+@app.delete("/favoriten/{recipe_id}", status_code=204)
+def remove_favorit(
+    recipe_id: int, current_user: dict = Depends(get_current_user)
+):
+    with db() as conn:
+        row = conn.execute(
+            "DELETE FROM favoriten WHERE recipe_id = %s AND user_id = %s "
+            "RETURNING id",
+            (recipe_id, current_user["id"]),
+        ).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="Favorit not found")
+
+
+# ---------- Wecker (Vorratskammer) ----------
+
+
+@app.get("/wecker", response_model=list[Wecker])
+def list_wecker(current_user: dict = Depends(get_current_user)):
+    with db() as conn:
+        return conn.execute(
+            "SELECT * FROM wecker WHERE user_id = %s ORDER BY fertig_am",
+            (current_user["id"],),
+        ).fetchall()
+
+
+@app.post("/wecker", response_model=Wecker)
+def create_wecker(
+    data: WeckerCreate, current_user: dict = Depends(get_current_user)
+):
+    with db() as conn:
+        return conn.execute(
+            "INSERT INTO wecker (user_id, produkt, einlegedatum, fertig_am) "
+            "VALUES (%s, %s, %s, %s) RETURNING *",
+            (
+                current_user["id"],
+                data.produkt,
+                data.einlegedatum,
+                data.fertig_am,
+            ),
+        ).fetchone()
+
+
+@app.delete("/wecker/{wecker_id}", status_code=204)
+def delete_wecker(
+    wecker_id: int, current_user: dict = Depends(get_current_user)
+):
+    with db() as conn:
+        row = conn.execute(
+            "DELETE FROM wecker WHERE id = %s AND user_id = %s RETURNING id",
+            (wecker_id, current_user["id"]),
+        ).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="Wecker not found")

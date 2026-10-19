@@ -546,14 +546,18 @@ def create_rezept(
     with db() as conn:
         new = conn.execute(
             "INSERT INTO rezepte "
-            "(owner_id, title, beschreibung, zutaten, schritte, kategorie, "
-            "image_url) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id",
+            "(owner_id, title, beschreibung, zutaten, vorbereitung, schritte, "
+            "fertigstellung, tipps, kategorie, image_url) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id",
             (
                 current_user["id"],
                 data.title,
                 data.beschreibung,
                 data.zutaten,
+                data.vorbereitung,
                 data.schritte,
+                data.fertigstellung,
+                data.tipps,
                 data.kategorie,
                 data.image_url,
             ),
