@@ -195,8 +195,9 @@ def get_me(current_user: UserPublic = Depends(get_current_user)):
 
 
 OFFER_SELECT = (
-    "SELECT o.*, u.name AS owner_name "
+    "SELECT o.*, u.name AS owner_name, r.name AS reserved_by_name "
     "FROM offers o JOIN users u ON u.id = o.owner_id "
+    "LEFT JOIN users r ON r.id = o.reserved_by "
 )
 
 

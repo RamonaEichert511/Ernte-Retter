@@ -32,6 +32,7 @@ class Offer(BaseModel):
     owner_id: int
     owner_name: str
     reserved_by: Optional[int] = None
+    reserved_by_name: Optional[str] = None
     menge: float
     einheit: Einheit
     location: str
