@@ -9,6 +9,7 @@ const items = [
   ["marktplatz", "people", "Ernte teilen"],
   ["favouriten", "heart", "Favoriten"],
   ["aufgaben", "check", "Aufgaben"],
+  ["chats", "mail", "Chats"],
 ];
 export default function Navbar({ darkMode, toggleDarkMode, activeView, user }) {
   const [open, setOpen] = useState(false);

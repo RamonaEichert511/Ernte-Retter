@@ -5,6 +5,7 @@ export default function OfferCard({
   onReserve,
   onWithdraw,
   onDelete,
+  onChat,
 }) {
   const reserved = offer.status === "reserved";
  const own =
@@ -43,6 +44,16 @@ export default function OfferCard({
         <p className="offer-description">{offer.description}</p>
       )}
       <div className="offer-actions">
+        {!own && (
+          <button
+            type="button"
+            className="secondary-button"
+            disabled={busy}
+            onClick={() => onChat(offer)}
+        >
+            {user ? "Nachricht schreiben" : "Zum Schreiben anmelden"}
+          </button>
+      )}
         {own ? (
           <button
             className="loeschen-button"

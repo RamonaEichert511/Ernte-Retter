@@ -2,7 +2,7 @@ import Hero from "./Hero";
 import Icon from "./Icon";
 import Botanical from "./Botanical";
 import OfferCard from "./OfferCard";
-export default function Home({ onSearch, market }) {
+export default function Home({ onSearch, market, onChat}) {
   return (
     <div className="home">
       <Hero onSearch={onSearch} />
@@ -66,6 +66,7 @@ export default function Home({ onSearch, market }) {
                   busy={market.busy}
                   onReserve={market.reserve}
                   onDelete={market.remove}
+                  onChat={onChat}
                 />
               ))}
             </div>

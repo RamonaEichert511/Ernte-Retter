@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import CreateOfferForm from "./CreateOfferForm";
 import OfferList from "./OfferList";
 import "./Marktplatz.css";
-export default function Marktplatz({ market }) {
+export default function Marktplatz({ market, onChat }) {
   const [filter, setFilter] = useState("all");
   const [message, setMessage] = useState("");
   const dialogRef = useRef(null);
@@ -132,6 +132,7 @@ function closeLinkedOffer() {
           offers={visibleOffers}
           user={market.user}
           busy={market.busy}
+          onChat={onChat}
           onReserve={(id) =>
             action(
               () => market.reserve(id),

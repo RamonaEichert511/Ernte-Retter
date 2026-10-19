@@ -12,6 +12,7 @@ import EinmachFibel from "./components/EinmachFibel";
 import Vorratskammer from "./components/Vorratskammer";
 import Footer from "./components/Footer";
 import Marktplatz from "./components/Marktplatz";
+import Chats from "./components/Chats";
 // NEU: Task Manager Komponenten
 import Dashboard from "./components/Dashboard";
 import TaskForm from "./components/TaskForm";
@@ -30,6 +31,7 @@ function App() {
     "info",
     "wecker",
     "marktplatz",
+    "chats",
     "favouriten",
     "aufgaben",
     "ueber-mich",
@@ -47,6 +49,28 @@ const readView = () => {
   const [activeView, setActiveView] = useState(readView);
   const [searchRequest, setSearchRequest] = useState(null);
   const market = useMarketplace();
+  const [chatTarget, setChatTarget] = useState(null);
+
+  useEffect(() => {
+    setChatTarget(null);
+  }, [market.user?.id]);
+
+  const openChat = (offer) => {
+    if (!market.user) {
+      window.location.hash = "konto";
+      return;
+    }
+
+    setChatTarget({
+      offer_id: offer.id,
+      offer_title: offer.title,
+      partner_id: offer.owner_id,
+      partner_name: offer.owner_name || "Anbieter",
+    });
+
+   window.location.hash = "chats";
+  }
+ 
   useEffect(() => {
     const update = () => {
       const nextView = readView();
@@ -203,7 +227,7 @@ const readView = () => {
             </p>
           )}
           {activeView === "uebersicht" && (
-            <Home onSearch={searchFromHero} market={market} />
+            <Home onSearch={searchFromHero} market={market} onChat={openChat} />
           )}
           {activeView === "rezepte" && (
             <div className="page-panel">
@@ -232,9 +256,19 @@ const readView = () => {
           )}
           {activeView === "marktplatz" && (
             <div className="page-panel">
-              <Marktplatz market={market} />
+              <Marktplatz market={market} onChat={openChat} />
             </div>
           )}
+          {activeView === "chats" && (
+            <div className="page-panel">
+              <Chats
+                key={`${market.user?.id ?? "gast"}:${chatTarget?.offer_id ?? ""}:${chatTarget?.partner_id ?? ""}`}
+                user={market.user}
+                initialConversation={chatTarget}
+              />
+            </div>
+          )}  
+          
           {activeView === "konto" && (
             <div className="page-panel">
               <Auth market={market} />

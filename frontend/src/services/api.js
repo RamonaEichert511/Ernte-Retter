@@ -19,6 +19,8 @@ export async function api(path, options = {}) {
 
   const protectedRequest =
     path === "/me" ||
+      path.startsWith("/nachrichten/") ||
+    /^\/offers\/[^/]+\/nachrichten(?:\?.*)?$/.test(path) ||
     path === "/aufgaben" ||
     path.startsWith("/aufgaben/") ||
     path === "/wecker" ||
