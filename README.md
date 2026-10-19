@@ -138,3 +138,18 @@ Projektvorstellung: 21. Oktober 2026
   - Email link im frontend einbauen 
   - email link bugfix 
   - Dark mode fehler im Inserat 
+
+#### *19.Oktober*
+######  Bendix:
+  - begonnen die Präsentationsfolien vorzubereiten
+
+######  Lee:
+  - Web socket und Profile bearbeiten Im backend gebaut
+
+######  Ramona:
+  - Chat button in Navbar und ans inserat frontend
+  - Reservierung aufheben, von Ersteller, button hinzufügen
+  - Automatische Abmeldung nach 60 min Inaktivität im Frontend eingebaut
+  - Rezepte rausgesucht
+  - “Mein Konto” Frontend bauen
+
