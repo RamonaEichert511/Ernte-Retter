@@ -35,10 +35,15 @@ function App() {
     "ueber-mich",
     "konto",
   ];
-  const readView = () =>
-    views.includes(window.location.hash.slice(1))
-      ? window.location.hash.slice(1)
-      : "uebersicht";
+const readView = () => {
+  const hashView = window.location.hash.slice(1);
+  const pathView = window.location.pathname.replace(/^\/|\/$/g, "");
+
+  if (views.includes(hashView)) return hashView;
+  if (views.includes(pathView)) return pathView;
+
+  return "uebersicht";
+};
   const [activeView, setActiveView] = useState(readView);
   const [searchRequest, setSearchRequest] = useState(null);
   const market = useMarketplace();

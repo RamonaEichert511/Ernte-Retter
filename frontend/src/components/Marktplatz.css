@@ -24,16 +24,15 @@
   width: 100%;
   min-width: 0;
   height: 48px;
-}
-
-.market-form .offer-quantity-group select {
   padding: 0 12px;
-  border: 1px solid #dedbcb;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: #fffef9;
-  color: inherit;
+  background: var(--surface);
+  color: var(--text);
   font: inherit;
 }
+
+
 .market-fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -241,4 +240,30 @@
 .offer-card .secondary-button,
 .offer-card .mein-button {
   font-size: 0.8rem;
+}
+.offer-link-dialog {
+  width: min(90vw, 560px);
+  max-height: 85vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 1.5rem;
+  border: 0;
+  border-radius: 16px;
+}
+
+.offer-link-dialog::backdrop {
+  background: rgb(0 0 0 / 55%);
+}
+
+.offer-link-dialog dt {
+  margin-top: 0.75rem;
+  font-weight: 700;
+}
+
+.offer-link-dialog dd {
+  margin-left: 0;
+}
+
+.offer-link-dialog .offer-description {
+  white-space: pre-wrap;
 }

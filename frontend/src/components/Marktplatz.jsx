@@ -1,10 +1,52 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import CreateOfferForm from "./CreateOfferForm";
 import OfferList from "./OfferList";
 import "./Marktplatz.css";
 export default function Marktplatz({ market }) {
   const [filter, setFilter] = useState("all");
   const [message, setMessage] = useState("");
+  const dialogRef = useRef(null);
+
+const [linkedOfferId, setLinkedOfferId] = useState(() =>
+  new URLSearchParams(window.location.search).get("offer"),
+);
+
+const linkedOffer = linkedOfferId
+  ? market.offers.find(
+      (offer) => String(offer.id) === linkedOfferId,
+    )
+  : null;
+
+useEffect(() => {
+  // URL-Parameter frisch auslesen (fängt auch direkte Einstiege ab)
+  const params = new URLSearchParams(window.location.search);
+  const offerId = params.get("offer");
+
+  // Erst feuern, wenn der Ladezustand fertig ist und Angebote da sind
+  if (!market.loading && offerId && market.offers?.length > 0) {
+    const found = market.offers.find((o) => String(o.id) === String(offerId));
+    
+    // Nur öffnen, wenn das Modal nicht schon offen ist
+    if (found && dialogRef.current && !dialogRef.current.open) {
+      dialogRef.current.showModal();
+    }
+  }
+}, [market.loading, market.offers]);
+
+
+function closeLinkedOffer() {
+  dialogRef.current?.close();
+  setLinkedOfferId(null);
+
+  const url = new URL(window.location.href);
+  url.searchParams.delete("offer");
+
+  window.history.replaceState(
+    window.history.state,
+    "",
+    `${url.pathname}${url.search}${url.hash}`,
+  );
+}
   async function action(operation, text) {
     setMessage("");
     const success = await operation();
