@@ -1,4 +1,10 @@
 const paths = {
+    mail: (
+    <>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3 6 9 7 9-7" />
+    </>
+  ),
   leaf: (
     <>
       <path d="M20 3c-9 0-16 4-16 11a6 6 0 0 0 6 6c7 0 10-8 10-17Z" />

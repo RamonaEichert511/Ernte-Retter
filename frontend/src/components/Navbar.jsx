@@ -9,8 +9,9 @@ const items = [
   ["marktplatz", "people", "Ernte teilen"],
   ["favouriten", "heart", "Favoriten"],
   ["aufgaben", "check", "Aufgaben"],
+  ["chats", "mail", "Chats"],
 ];
-export default function Navbar({ darkMode, toggleDarkMode, activeView, user }) {
+export default function Navbar({ darkMode, toggleDarkMode, activeView, user, unreadMessages = 0, }) {
   const [open, setOpen] = useState(false);
   useEffect(() => {
     if (!open) return;
@@ -66,6 +67,15 @@ export default function Navbar({ darkMode, toggleDarkMode, activeView, user }) {
                 >
                   <Icon name={icon} />
                   {label}
+                  {id === "chats" && unreadMessages > 0 && (
+                    <span
+                    className="nav-unread"
+                    aria-label={`${unreadMessages} ungelesene Nachrichten`}
+                    >
+                      ({unreadMessages}) 
+                    </span>
+                  )}
+
                 </a>
               </li>
             ))}

@@ -12,6 +12,7 @@ import EinmachFibel from "./components/EinmachFibel";
 import Vorratskammer from "./components/Vorratskammer";
 import Footer from "./components/Footer";
 import Marktplatz from "./components/Marktplatz";
+import Chats from "./components/Chats";
 // NEU: Task Manager Komponenten
 import Dashboard from "./components/Dashboard";
 import TaskForm from "./components/TaskForm";
@@ -30,6 +31,7 @@ function App() {
     "info",
     "wecker",
     "marktplatz",
+    "chats",
     "favouriten",
     "aufgaben",
     "ueber-mich",
@@ -47,6 +49,89 @@ const readView = () => {
   const [activeView, setActiveView] = useState(readView);
   const [searchRequest, setSearchRequest] = useState(null);
   const market = useMarketplace();
+  const [unreadMessages, setUnreadMessages] = useState(0);
+
+  useEffect(() => {
+    setUnreadMessages(0);
+
+    if (!market.user) return;
+
+    const controller = new AbortController();
+    let loading = false;
+
+    async function updateUnreadMessages() {
+      if (loading || controller.signal.aborted) return;
+
+      loading = true;
+
+      try {
+        const conversations = await api("/nachrichten/inbox", {
+          signal: controller.signal,
+        });
+
+        if (!controller.signal.aborted) {
+          const total = conversations.reduce(
+            (sum, conversation) => sum + conversation.ungelesen,
+            0,
+          );
+
+          setUnreadMessages(total);
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          console.error(
+            "Ungelesene Nachrichten konnten nicht geladen werden:",
+            error,
+          );
+        }
+    } finally {
+      loading = false;
+    }
+  }
+
+  updateUnreadMessages();
+
+  const interval = window.setInterval(updateUnreadMessages, 30000);
+
+  window.addEventListener("focus", updateUnreadMessages);
+  window.addEventListener(
+    "ernte-retter:messages-read",
+    updateUnreadMessages,
+  );
+
+  return () => {
+    controller.abort();
+    window.clearInterval(interval);
+
+    window.removeEventListener("focus", updateUnreadMessages);
+    window.removeEventListener(
+      "ernte-retter:messages-read",
+      updateUnreadMessages,
+    );
+  };
+}, [market.user?.id]);  
+  const [chatTarget, setChatTarget] = useState(null);
+
+  useEffect(() => {
+    setChatTarget(null);
+  }, [market.user?.id]);
+
+  const openChat = (offer) => {
+    if (!market.user) {
+      window.location.hash = "konto";
+      return;
+    }
+
+    setChatTarget({
+      offer_id: offer.id,
+      offer_title: offer.title,
+      partner_id: offer.owner_id,
+      partner_name: offer.owner_name || "Anbieter",
+    });
+
+   window.location.hash = "chats";
+  }
+ 
   useEffect(() => {
     const update = () => {
       const nextView = readView();
@@ -194,6 +279,7 @@ const readView = () => {
         toggleDarkMode={toggleDarkMode}
         activeView={activeView}
         user={market.user}
+        unreadMessages={unreadMessages}
       />
       <div className="workspace">
         <main key={activeView} id="main-content" tabIndex={-1}>
@@ -203,7 +289,7 @@ const readView = () => {
             </p>
           )}
           {activeView === "uebersicht" && (
-            <Home onSearch={searchFromHero} market={market} />
+            <Home onSearch={searchFromHero} market={market} onChat={openChat} />
           )}
           {activeView === "rezepte" && (
             <div className="page-panel">
@@ -232,9 +318,19 @@ const readView = () => {
           )}
           {activeView === "marktplatz" && (
             <div className="page-panel">
-              <Marktplatz market={market} />
+              <Marktplatz market={market} onChat={openChat} />
             </div>
           )}
+          {activeView === "chats" && (
+            <div className="page-panel">
+              <Chats
+                key={`${market.user?.id ?? "gast"}:${chatTarget?.offer_id ?? ""}:${chatTarget?.partner_id ?? ""}`}
+                user={market.user}
+                initialConversation={chatTarget}
+              />
+            </div>
+          )}  
+          
           {activeView === "konto" && (
             <div className="page-panel">
               <Auth market={market} />
