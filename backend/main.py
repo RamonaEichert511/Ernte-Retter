@@ -3,6 +3,9 @@ import os
 import secrets
 from contextlib import asynccontextmanager
 from typing import Optional
+from fastapi import WebSocket, WebSocketDisconnect
+import jwt
+from auth import SECRET_KEY, ALGORITHM
 
 import psycopg.errors
 from fastapi import (
@@ -189,6 +192,28 @@ def login(data: OAuth2PasswordRequestForm = Depends()):
 @app.get("/me", response_model=UserPublic)
 def get_me(current_user: UserPublic = Depends(get_current_user)):
     return current_user
+
+@app.put("/me", response_model=UserPublic)
+def update_me(data: UserUpdate, current_user: dict = Depends(get_current_user)):
+    with db() as conn:
+        updates = []
+        params = []
+        if data.name is not None:
+            updates.append("name = %s")
+            params.append(data.name.strip())
+        if data.password is not None:
+            updates.append("password_hash = %s")
+            params.append(hash_password(data.password))
+        
+        if not updates:
+            return current_user
+
+        params.append(current_user["id"])
+        row = conn.execute(
+            f"UPDATE users SET {', '.join(updates)} WHERE id = %s RETURNING id, name, email",
+            tuple(params)
+        ).fetchone()
+        return row
 
 
 # ---------- Offers (Ernte teilen) ----------
@@ -391,6 +416,19 @@ def send_nachricht(
                 background_tasks.add_task(
                     send_email, empfaenger["email"], subject, body
                 )
+
+        # Trigger the WebSocket notification asynchronously via background tasks
+        background_tasks.add_task(
+            manager.send_personal_message,
+            partner,
+            {
+                "type": "new_message",
+                "offer_id": offer_id,
+                "sender_id": me,
+                "text": text,
+            },
+        )
+
         return row
 
 
@@ -666,3 +704,44 @@ def delete_wecker(
         ).fetchone()
         if row is None:
             raise HTTPException(status_code=404, detail="Wecker not found")
+
+#------- web socket -------------
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: dict[int, list[WebSocket]] = {}
+
+    async def connect(self, user_id: int, websocket: WebSocket):
+        await websocket.accept()
+        if user_id not in self.active_connections:
+            self.active_connections[user_id] = []
+        self.active_connections[user_id].append(websocket)
+
+    def disconnect(self, user_id: int, websocket: WebSocket):
+        if user_id in self.active_connections:
+            self.active_connections[user_id].remove(websocket)
+            if not self.active_connections[user_id]:
+                del self.active_connections[user_id]
+
+    async def notify_user(self, user_id: int, data: dict):
+        if user_id in self.active_connections:
+            for connection in self.active_connections[user_id]:
+                await connection.send_json(data)
+
+@app.websocket("/ws/notifications")
+async def websocket_notifications(websocket: WebSocket, token: str = Query(...)):
+    try:
+        # Token validieren
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = int(payload["sub"])
+    except (InvalidTokenError, KeyError, ValueError):
+        await websocket.close(code=4001)
+        return
+
+    await manager.connect(user_id, websocket)
+    try:
+        while True:
+            # Verbindung offen halten und auf eingehende Pings/Nachrichten lauschen falls nötig
+            data = await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(user_id, websocket)

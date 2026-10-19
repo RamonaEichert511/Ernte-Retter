@@ -177,3 +177,8 @@ class Wecker(BaseModel):
     einlegedatum: date
     fertig_am: datetime
     created_at: datetime
+
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = Field(default=None, min_length=1, max_length=100)
+    password: Optional[str] = Field(default=None, min_length=8, max_length=128)
