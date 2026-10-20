@@ -1,6 +1,6 @@
 
 import { useState, useMemo, useEffect } from "react";
-import { api } from "./services/api";
+import { api, getToken } from "./services/api";
 import Navbar from "./components/Navbar";
 import Home from "./components/Home";
 import Auth from "./components/Auth";
@@ -51,47 +51,137 @@ const readView = () => {
   const market = useMarketplace();
   const [unreadMessages, setUnreadMessages] = useState(0);
 
-  useEffect(() => {
-    setUnreadMessages(0);
+useEffect(() => {
+  setUnreadMessages(0);
 
-    if (!market.user) return;
+  if (!market.user) return;
 
-    const controller = new AbortController();
-    let loading = false;
+  const controller = new AbortController();
 
-    async function updateUnreadMessages() {
-      if (loading || controller.signal.aborted) return;
+  let websocket;
+  let reconnectTimer;
+  let stopped = false;
+  let reconnectDelay = 1000;
+  let loading = false;
+  let reloadRequested = false;
 
-      loading = true;
+  async function updateUnreadMessages() {
+    if (stopped) return;
 
-      try {
+    // Kommt während einer Abfrage ein neues Ereignis,
+    // fragen wir danach noch einmal ab.
+    reloadRequested = true;
+
+    if (loading) return;
+
+    loading = true;
+
+    try {
+      while (reloadRequested && !stopped) {
+        reloadRequested = false;
+
         const conversations = await api("/nachrichten/inbox", {
           signal: controller.signal,
         });
 
-        if (!controller.signal.aborted) {
-          const total = conversations.reduce(
-            (sum, conversation) => sum + conversation.ungelesen,
-            0,
-          );
+        if (stopped) return;
 
-          setUnreadMessages(total);
-        }
-      } catch (error) {
-        if (!controller.signal.aborted) {
-          console.error(
-            "Ungelesene Nachrichten konnten nicht geladen werden:",
-            error,
-          );
-        }
+        const total = conversations.reduce(
+          (sum, conversation) => sum + conversation.ungelesen,
+          0,
+        );
+
+        setUnreadMessages(total);
+      }
+    } catch (error) {
+      if (!stopped) {
+        console.error(
+          "Ungelesene Nachrichten konnten nicht geladen werden:",
+          error,
+        );
+      }
     } finally {
       loading = false;
     }
   }
 
-  updateUnreadMessages();
+  function connectWebSocket() {
+    if (stopped) return;
 
-  const interval = window.setInterval(updateUnreadMessages, 30000);
+    const token = getToken();
+
+    if (!token) return;
+
+    // Dieselbe Backend-Adresse wie für unsere API verwenden.
+    const apiBase = import.meta.env.VITE_API_URL || "/api";
+    const url = new URL(apiBase, window.location.origin);
+
+    url.pathname =
+      `${url.pathname.replace(/\/+$/, "")}/ws/notifications`;
+
+    url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+    url.search = "";
+    url.hash = "";
+    url.searchParams.set("token", token);
+
+    websocket = new WebSocket(url.toString());
+
+    websocket.onopen = () => {
+      if (stopped) return;
+
+      reconnectDelay = 1000;
+
+      // Auch nach einem Verbindungsabbruch die aktuelle Zahl laden.
+      void updateUnreadMessages();
+    };
+
+    websocket.onmessage = (event) => {
+      if (stopped) return;
+
+      try {
+        const notification = JSON.parse(event.data);
+
+        if (notification.type === "new_message") {
+          void updateUnreadMessages();
+
+          window.dispatchEvent(
+            new Event("ernte-retter:new-message"),
+          );
+        }
+      } catch {
+        console.warn(
+          "WebSocket-Benachrichtigung konnte nicht gelesen werden.",
+        );
+      }
+    };
+
+    websocket.onerror = () => {
+      // onclose kümmert sich anschließend um den Neuaufbau.
+      websocket.close();
+    };
+
+    websocket.onclose = (event) => {
+      if (stopped) return;
+
+      // Bei abgewiesener Anmeldung nicht endlos neu verbinden.
+      if ([1008, 4401, 4403].includes(event.code)) {
+        console.warn(
+          "Die WebSocket-Verbindung wurde vom Backend abgewiesen.",
+        );
+        return;
+      }
+
+      reconnectTimer = window.setTimeout(
+        connectWebSocket,
+        reconnectDelay,
+      );
+
+      reconnectDelay = Math.min(reconnectDelay * 2, 30000);
+    };
+  }
+
+  void updateUnreadMessages();
+  connectWebSocket();
 
   window.addEventListener("focus", updateUnreadMessages);
   window.addEventListener(
@@ -100,16 +190,26 @@ const readView = () => {
   );
 
   return () => {
+    stopped = true;
+
     controller.abort();
-    window.clearInterval(interval);
+    window.clearTimeout(reconnectTimer);
 
     window.removeEventListener("focus", updateUnreadMessages);
     window.removeEventListener(
       "ernte-retter:messages-read",
       updateUnreadMessages,
     );
+
+    if (websocket) {
+      websocket.onopen = null;
+      websocket.onmessage = null;
+      websocket.onerror = null;
+      websocket.onclose = null;
+      websocket.close();
+    }
   };
-}, [market.user?.id]);  
+}, [market.user?.id]);
   const [chatTarget, setChatTarget] = useState(null);
 
   useEffect(() => {

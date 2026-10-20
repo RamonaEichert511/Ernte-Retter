@@ -24,6 +24,25 @@ export default function Chats({ user, initialConversation = null }) {
 
   selectionRef.current = conversationKey;
 
+  useEffect(() => {
+  if (!user) return;
+
+  const refreshChats = () => {
+    setReload((previous) => previous + 1);
+  };
+
+  window.addEventListener(
+    "ernte-retter:new-message",
+    refreshChats,
+  );
+
+  return () => {
+    window.removeEventListener(
+      "ernte-retter:new-message",
+      refreshChats,
+    );
+  };
+}, [user?.id]);
   // Gesprächsübersicht laden.
   useEffect(() => {
     if (!user) return;
