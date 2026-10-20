@@ -8,6 +8,45 @@ export default function ProfilPopup({ userId, name, onClose }) {
   const [inserate, setInserate] = useState([]);
   const [laden, setLaden] = useState(true);
   const [fehler, setFehler] = useState("");
+  const [profil, setProfil] = useState(null);
+  const [profilLaden, setProfilLaden] = useState(true);
+  const [profilFehler, setProfilFehler] = useState("");
+
+  useEffect(() => {
+    let aktiv = true;
+
+    async function profilAbrufen() {
+      setProfilLaden(true);
+      setProfilFehler("");
+      setProfil(null);
+
+      try {
+        const daten = await api(`/users/${userId}/profile`);
+
+        if (aktiv) {
+          setProfil(daten);
+        }
+      } catch (error) {
+        if (aktiv) {
+          setProfilFehler(
+            error.status === 404
+              ? "Dieses Profil wurde nicht gefunden."
+              : "Die Profilangaben konnten nicht geladen werden.",
+          );
+        }
+      } finally {
+        if (aktiv) {
+          setProfilLaden(false);
+        }
+      }
+    }
+
+    void profilAbrufen();
+
+    return () => {
+      aktiv = false;
+    };
+  }, [userId]);
 
   useEffect(() => {
     let aktiv = true;
@@ -22,9 +61,7 @@ export default function ProfilPopup({ userId, name, onClose }) {
 
         if (aktiv) {
           setInserate(
-            angebote.filter(
-              (angebot) => angebot.owner_id === userId,
-            ),
+            angebote.filter((angebot) => angebot.owner_id === userId),
           );
         }
       } catch {
@@ -45,13 +82,14 @@ export default function ProfilPopup({ userId, name, onClose }) {
     };
   }, [userId]);
 
-  const initialen = (name || "")
-    .trim()
-    .split(/\s+/)
-    .map((teil) => Array.from(teil)[0] || "")
-    .slice(0, 2)
-    .join("")
-    .toUpperCase() || "?";
+  const initialen =
+    (name || "")
+      .trim()
+      .split(/\s+/)
+      .map((teil) => Array.from(teil)[0] || "")
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "?";
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -98,9 +136,37 @@ export default function ProfilPopup({ userId, name, onClose }) {
         <h2 id={titelId}>{name}</h2>
       </div>
 
-      <p className="profil-popup-hinweis">
-        Weitere Profilangaben sind hier bald verfügbar.
-      </p>
+      <div className="profil-popup-hinweis">
+        {profilLaden ? (
+          <p role="status">Profilangaben werden geladen …</p>
+        ) : profilFehler ? (
+          <p className="form-error" role="alert">
+            {profilFehler}
+          </p>
+        ) : (
+          <>
+            {(profil?.plz || profil?.wohnort) && (
+              <p>
+                <strong>Wohnort: </strong>
+                {[profil.plz, profil.wohnort].filter(Boolean).join(" ")}
+              </p>
+            )}
+
+            {profil?.ueber_mich && (
+              <div>
+                <strong>Über mich</strong>
+                <p style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
+                  {profil.ueber_mich}
+                </p>
+              </div>
+            )}
+
+            {!profil?.plz && !profil?.wohnort && !profil?.ueber_mich && (
+              <p>Noch keine weiteren Profilangaben hinterlegt.</p>
+            )}
+          </>
+        )}
+      </div>
       <section className="profil-popup-inserate">
         <h3>Inserate von {name}</h3>
 
@@ -115,10 +181,9 @@ export default function ProfilPopup({ userId, name, onClose }) {
         ) : (
           <ul className="profil-inserate-liste">
             {inserate.map((angebot) => {
-              const reserviert = [
-                "reserviert",
-                "reserved",
-              ].includes(angebot.status);
+              const reserviert = ["reserviert", "reserved"].includes(
+                angebot.status,
+              );
 
               return (
                 <li key={angebot.id} className="profil-inserat">
