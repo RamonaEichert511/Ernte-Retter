@@ -1,6 +1,7 @@
 import { useState } from "react";
 import OfferList from "./OfferList";
 import "./Konto.css";
+import KontodatenForm from "./KontodatenForm";
 
 export default function Konto({ market, onChat }) {
   const user = market.user;
@@ -94,6 +95,9 @@ export default function Konto({ market, onChat }) {
         </div>
       </header>
     {profilBearbeiten && (
+      <>
+        <KontodatenForm market={market} />
+        
         <form
           id="konto-profilformular"
           className="konto-profilformular"
@@ -188,6 +192,7 @@ export default function Konto({ market, onChat }) {
             </button>
           </div>
         </form>
+      </>
     )}
 
       <div className="konto-zahlen">
