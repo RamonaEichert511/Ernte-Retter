@@ -153,3 +153,17 @@ Projektvorstellung: 21. Oktober 2026
   - Rezepte rausgesucht
   - “Mein Konto” Frontend bauen
 
+#### *20.Oktober*
+######  Bendix:
+  - Präsentations folien 
+
+######  Lee:
+  - Bugfixing und mein Konto & Auto Logout eingebaut
+
+######  Ramona:
+  - Inserat verlinkung im PopUp konto
+  - Konto informationen hinzufügen → nach anbindung ans backend
+  - Änderungen Speichern button ‘aktivieren’
+  - Fix zwischen frontend und backend
+  - Chat entfernen button hinzugefügt
+  - Impressum 
