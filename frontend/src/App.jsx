@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useEffect, useRef } from "react";
 import { api, getToken } from "./services/api";
 import Navbar from "./components/Navbar";
@@ -13,6 +12,7 @@ import Vorratskammer from "./components/Vorratskammer";
 import Footer from "./components/Footer";
 import Marktplatz from "./components/Marktplatz";
 import Chats from "./components/Chats";
+import Impressum from "./components/Impressum";
 // NEU: Task Manager Komponenten
 import Dashboard from "./components/Dashboard";
 import TaskForm from "./components/TaskForm";
@@ -36,207 +36,199 @@ function App() {
     "aufgaben",
     "ueber-mich",
     "konto",
+    "impressum",
   ];
-const readView = () => {
-  const hashView = window.location.hash.slice(1);
-  const pathView = window.location.pathname.replace(/^\/|\/$/g, "");
+  const readView = () => {
+    const hashView = window.location.hash.slice(1);
+    const pathView = window.location.pathname.replace(/^\/|\/$/g, "");
 
-  if (views.includes(hashView)) return hashView;
-  if (views.includes(pathView)) return pathView;
+    if (views.includes(hashView)) return hashView;
+    if (views.includes(pathView)) return pathView;
 
-  return "uebersicht";
-};
+    return "uebersicht";
+  };
   const [activeView, setActiveView] = useState(readView);
   const [searchRequest, setSearchRequest] = useState(null);
   const market = useMarketplace();
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [messageToast, setMessageToast] = useState(false);
-const toastTimer = useRef(null);
+  const toastTimer = useRef(null);
 
-function closeMessageToast() {
-  window.clearTimeout(toastTimer.current);
-  setMessageToast(false);
-}
-
-function showMessageToast() {
-  window.clearTimeout(toastTimer.current);
-  setMessageToast(true);
-
-  toastTimer.current = window.setTimeout(() => {
-    setMessageToast(false);
-  }, 6000);
-}
-
-// Bei Kontowechsel oder Logout den Hinweis entfernen.
-useEffect(() => {
-  setMessageToast(false);
-  window.clearTimeout(toastTimer.current);
-
-  return () => {
+  function closeMessageToast() {
     window.clearTimeout(toastTimer.current);
-  };
-}, [market.user?.id]);
-
-useEffect(() => {
-  setUnreadMessages(0);
-
-  if (!market.user) return;
-
-  const controller = new AbortController();
-
-  let websocket;
-  let reconnectTimer;
-  let stopped = false;
-  let reconnectDelay = 1000;
-  let loading = false;
-  let reloadRequested = false;
-
-  async function updateUnreadMessages() {
-    if (stopped) return;
-
-    // Kommt während einer Abfrage ein neues Ereignis,
-    // fragen wir danach noch einmal ab.
-    reloadRequested = true;
-
-    if (loading) return;
-
-    loading = true;
-
-    try {
-      while (reloadRequested && !stopped) {
-        reloadRequested = false;
-
-        const conversations = await api("/nachrichten/inbox", {
-          signal: controller.signal,
-        });
-
-        if (stopped) return;
-
-        const total = conversations.reduce(
-          (sum, conversation) => sum + conversation.ungelesen,
-          0,
-        );
-
-        setUnreadMessages(total);
-      }
-    } catch (error) {
-      if (!stopped) {
-        console.error(
-          "Ungelesene Nachrichten konnten nicht geladen werden:",
-          error,
-        );
-      }
-    } finally {
-      loading = false;
-    }
+    setMessageToast(false);
   }
 
-  function connectWebSocket() {
-    if (stopped) return;
+  function showMessageToast() {
+    window.clearTimeout(toastTimer.current);
+    setMessageToast(true);
 
-    const token = getToken();
+    toastTimer.current = window.setTimeout(() => {
+      setMessageToast(false);
+    }, 6000);
+  }
 
-    if (!token) return;
+  // Bei Kontowechsel oder Logout den Hinweis entfernen.
+  useEffect(() => {
+    setMessageToast(false);
+    window.clearTimeout(toastTimer.current);
 
-    // Dieselbe Backend-Adresse wie für unsere API verwenden.
-    const apiBase = import.meta.env.VITE_API_URL || "/api";
-    const url = new URL(apiBase, window.location.origin);
-
-    url.pathname =
-      `${url.pathname.replace(/\/+$/, "")}/ws/notifications`;
-
-    url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
-    url.search = "";
-    url.hash = "";
-    url.searchParams.set("token", token);
-
-    websocket = new WebSocket(url.toString());
-
-    websocket.onopen = () => {
-      if (stopped) return;
-
-      reconnectDelay = 1000;
-
-      // Auch nach einem Verbindungsabbruch die aktuelle Zahl laden.
-      void updateUnreadMessages();
+    return () => {
+      window.clearTimeout(toastTimer.current);
     };
+  }, [market.user?.id]);
 
-    websocket.onmessage = (event) => {
+  useEffect(() => {
+    setUnreadMessages(0);
+
+    if (!market.user) return;
+
+    const controller = new AbortController();
+
+    let websocket;
+    let reconnectTimer;
+    let stopped = false;
+    let reconnectDelay = 1000;
+    let loading = false;
+    let reloadRequested = false;
+
+    async function updateUnreadMessages() {
       if (stopped) return;
+
+      // Kommt während einer Abfrage ein neues Ereignis,
+      // fragen wir danach noch einmal ab.
+      reloadRequested = true;
+
+      if (loading) return;
+
+      loading = true;
 
       try {
-        const notification = JSON.parse(event.data);
+        while (reloadRequested && !stopped) {
+          reloadRequested = false;
 
-        if (notification.type === "new_message") {
-          void updateUnreadMessages();
-          showMessageToast();
+          const conversations = await api("/nachrichten/inbox", {
+            signal: controller.signal,
+          });
 
-          window.dispatchEvent(
-            new Event("ernte-retter:new-message"),
+          if (stopped) return;
+
+          const total = conversations.reduce(
+            (sum, conversation) => sum + conversation.ungelesen,
+            0,
+          );
+
+          setUnreadMessages(total);
+        }
+      } catch (error) {
+        if (!stopped) {
+          console.error(
+            "Ungelesene Nachrichten konnten nicht geladen werden:",
+            error,
           );
         }
-      } catch {
-        console.warn(
-          "WebSocket-Benachrichtigung konnte nicht gelesen werden.",
-        );
+      } finally {
+        loading = false;
       }
-    };
+    }
 
-    websocket.onerror = () => {
-      // onclose kümmert sich anschließend um den Neuaufbau.
-      websocket.close();
-    };
-
-    websocket.onclose = (event) => {
+    function connectWebSocket() {
       if (stopped) return;
 
-      // Bei abgewiesener Anmeldung nicht endlos neu verbinden.
-      if ([1008, 4401, 4403].includes(event.code)) {
-        console.warn(
-          "Die WebSocket-Verbindung wurde vom Backend abgewiesen.",
-        );
-        return;
-      }
+      const token = getToken();
 
-      reconnectTimer = window.setTimeout(
-        connectWebSocket,
-        reconnectDelay,
+      if (!token) return;
+
+      // Dieselbe Backend-Adresse wie für unsere API verwenden.
+      const apiBase = import.meta.env.VITE_API_URL || "/api";
+      const url = new URL(apiBase, window.location.origin);
+
+      url.pathname = `${url.pathname.replace(/\/+$/, "")}/ws/notifications`;
+
+      url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+      url.search = "";
+      url.hash = "";
+      url.searchParams.set("token", token);
+
+      websocket = new WebSocket(url.toString());
+
+      websocket.onopen = () => {
+        if (stopped) return;
+
+        reconnectDelay = 1000;
+
+        // Auch nach einem Verbindungsabbruch die aktuelle Zahl laden.
+        void updateUnreadMessages();
+      };
+
+      websocket.onmessage = (event) => {
+        if (stopped) return;
+
+        try {
+          const notification = JSON.parse(event.data);
+
+          if (notification.type === "new_message") {
+            void updateUnreadMessages();
+            showMessageToast();
+
+            window.dispatchEvent(new Event("ernte-retter:new-message"));
+          }
+        } catch {
+          console.warn(
+            "WebSocket-Benachrichtigung konnte nicht gelesen werden.",
+          );
+        }
+      };
+
+      websocket.onerror = () => {
+        // onclose kümmert sich anschließend um den Neuaufbau.
+        websocket.close();
+      };
+
+      websocket.onclose = (event) => {
+        if (stopped) return;
+
+        // Bei abgewiesener Anmeldung nicht endlos neu verbinden.
+        if ([1008, 4401, 4403].includes(event.code)) {
+          console.warn(
+            "Die WebSocket-Verbindung wurde vom Backend abgewiesen.",
+          );
+          return;
+        }
+
+        reconnectTimer = window.setTimeout(connectWebSocket, reconnectDelay);
+
+        reconnectDelay = Math.min(reconnectDelay * 2, 30000);
+      };
+    }
+
+    void updateUnreadMessages();
+    connectWebSocket();
+
+    window.addEventListener("focus", updateUnreadMessages);
+    window.addEventListener("ernte-retter:messages-read", updateUnreadMessages);
+
+    return () => {
+      stopped = true;
+
+      controller.abort();
+      window.clearTimeout(reconnectTimer);
+
+      window.removeEventListener("focus", updateUnreadMessages);
+      window.removeEventListener(
+        "ernte-retter:messages-read",
+        updateUnreadMessages,
       );
 
-      reconnectDelay = Math.min(reconnectDelay * 2, 30000);
+      if (websocket) {
+        websocket.onopen = null;
+        websocket.onmessage = null;
+        websocket.onerror = null;
+        websocket.onclose = null;
+        websocket.close();
+      }
     };
-  }
-
-  void updateUnreadMessages();
-  connectWebSocket();
-
-  window.addEventListener("focus", updateUnreadMessages);
-  window.addEventListener(
-    "ernte-retter:messages-read",
-    updateUnreadMessages,
-  );
-
-  return () => {
-    stopped = true;
-
-    controller.abort();
-    window.clearTimeout(reconnectTimer);
-
-    window.removeEventListener("focus", updateUnreadMessages);
-    window.removeEventListener(
-      "ernte-retter:messages-read",
-      updateUnreadMessages,
-    );
-
-    if (websocket) {
-      websocket.onopen = null;
-      websocket.onmessage = null;
-      websocket.onerror = null;
-      websocket.onclose = null;
-      websocket.close();
-    }
-  };
-}, [market.user?.id]);
+  }, [market.user?.id]);
   const [chatTarget, setChatTarget] = useState(null);
 
   useEffect(() => {
@@ -256,9 +248,9 @@ useEffect(() => {
       partner_name: offer.owner_name || "Anbieter",
     });
 
-   window.location.hash = "chats";
-  }
- 
+    window.location.hash = "chats";
+  };
+
   useEffect(() => {
     const update = () => {
       const nextView = readView();
@@ -298,32 +290,32 @@ useEffect(() => {
   const [tasks, setTasks] = useState([]);
   const [filter, setFilter] = useState("alle");
   useEffect(() => {
-  let cancelled = false;
+    let cancelled = false;
 
-  setTasks([]);
+    setTasks([]);
 
-  if (!market.user || activeView !== "aufgaben") return;
+    if (!market.user || activeView !== "aufgaben") return;
 
-  async function loadTasks() {
-    try {
-      const data = await api("/aufgaben");
+    async function loadTasks() {
+      try {
+        const data = await api("/aufgaben");
 
-      if (!cancelled) {
-        setTasks(data);
-      }
-    } catch (error) {
-      if (!cancelled) {
-        console.error("Aufgaben konnten nicht geladen werden:", error);
+        if (!cancelled) {
+          setTasks(data);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error("Aufgaben konnten nicht geladen werden:", error);
+        }
       }
     }
-  }
 
-  loadTasks();
+    loadTasks();
 
-  return () => {
-    cancelled = true;
-  };
-}, [market.user?.id, activeView]);
+    return () => {
+      cancelled = true;
+    };
+  }, [market.user?.id, activeView]);
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
@@ -342,10 +334,9 @@ useEffect(() => {
       });
       setTasks((previousTasks) => [...previousTasks, newTask]);
     } catch (error) {
-      alert (`Fehler beim Erstellen der Aufgabe: ${error.message}`);
+      alert(`Fehler beim Erstellen der Aufgabe: ${error.message}`);
     }
   };
-    
 
   // Schritt 7: Task-Status umschalten
   const toggleTask = (id) => {
@@ -359,11 +350,11 @@ useEffect(() => {
   // Schritt 7: Task löschen
   const deleteTask = async (id) => {
     try {
-      await api(`/aufgaben/${id}`, { 
-        method: "DELETE" 
+      await api(`/aufgaben/${id}`, {
+        method: "DELETE",
       });
       setTasks((previousTasks) =>
-        previousTasks.filter((task) => task.id !== id)
+        previousTasks.filter((task) => task.id !== id),
       );
     } catch (error) {
       alert(`Fehler beim Löschen der Aufgabe: ${error.message}`);
@@ -485,8 +476,12 @@ useEffect(() => {
                 initialConversation={chatTarget}
               />
             </div>
-          )}  
-          
+          )}
+          {activeView === "impressum" && (
+            <div className="page-panel">
+              <Impressum />
+            </div>
+          )}
           {activeView === "konto" && (
             <div className="page-panel">
               <Auth market={market} onChat={openChat} />
@@ -519,4 +514,3 @@ useEffect(() => {
 }
 
 export default App;
-

@@ -166,3 +166,4 @@ Projektvorstellung: 21. Oktober 2026
   - Änderungen Speichern button ‘aktivieren’
   - Fix zwischen frontend und backend
   - Chat entfernen button hinzugefügt
+  - Impressum 
