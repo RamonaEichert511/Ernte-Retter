@@ -231,10 +231,11 @@ def login(data: OAuth2PasswordRequestForm = Depends()):
             status_code=status.HTTP_403_FORBIDDEN,
             detail="E-Mail-Adresse ist noch nicht bestätigt",
         )
+
     # every login starts its own session (one per device)
     session_id = create_session(row["id"])
     return {
-        "access_token": create_access_token(row["id"]),
+        "access_token": create_access_token(row["id"], session_id),
         "token_type": "bearer",
     }
 
