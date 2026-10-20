@@ -1,7 +1,8 @@
 from datetime import date, datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator, field_serializer
+import re
 
 Einheit = Literal["kg", "g", "Stück", "Bund", "Liter"]
 Prioritaet = Literal["hoch", "mittel", "niedrig"]
