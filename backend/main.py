@@ -26,7 +26,6 @@ from auth import (
     verify_password,
 )
 from creation.schemas import (
-    ActivityRequest,
     Aufgabe,
     AufgabeCreate,
     Favorit,
@@ -187,8 +186,6 @@ def login(data: OAuth2PasswordRequestForm = Depends()):
             detail="E-Mail-Adresse ist noch nicht bestätigt",
         )
 
-    # every login starts its own session (one per device)
-    session_id = create_session(row["id"])
     return {
         "access_token": create_access_token(row["id"], session_id),
         "token_type": "bearer",
@@ -220,56 +217,6 @@ def auth_activity(
 @app.post("/auth/logout", status_code=status.HTTP_204_NO_CONTENT)
 def auth_logout(current_user: dict = Depends(get_current_user)):
     end_session(current_user["session_id"])
-
-
-# ---------- Profile ("Mein Konto") ----------
-
-# the only profile fields a user can change (also protects the column names)
-PROFILFELDER = ("wohnort", "plz", "ueber_mich")
-
-ME_SELECT = (
-    "SELECT id, name, email, wohnort, plz, ueber_mich FROM users "
-    "WHERE id = %s"
-)
-
-
-@app.get("/me", response_model=UserMe)
-def get_me(current_user: dict = Depends(get_current_user)):
-    with db() as conn:
-        return conn.execute(ME_SELECT, (current_user["id"],)).fetchone()
-
-
-@app.patch("/me", response_model=UserMe)
-def update_me(
-    data: ProfilUpdate, current_user: dict = Depends(get_current_user)
-):
-    # only fields that were sent; an empty text or null removes the value
-    gesendet = data.model_dump(exclude_unset=True)
-    felder = [f for f in PROFILFELDER if f in gesendet]
-    with db() as conn:
-        if felder:
-            conn.execute(
-                "UPDATE users SET "
-                + ", ".join(f"{f} = %s" for f in felder)
-                + " WHERE id = %s",
-                (*[gesendet[f] or None for f in felder], current_user["id"]),
-            )
-        return conn.execute(ME_SELECT, (current_user["id"],)).fetchone()
-
-
-@app.get("/users/{user_id}/profile", response_model=ProfilPublic)
-def get_public_profile(user_id: int):
-    # no login required; only public fields are selected
-    with db() as conn:
-        row = conn.execute(
-            "SELECT id, name, wohnort, plz, ueber_mich FROM users "
-            "WHERE id = %s",
-            (user_id,),
-        ).fetchone()
-        if row is None:
-            raise HTTPException(status_code=404, detail="User not found")
-        return row
-
 
 # ---------- Offers (Ernte teilen) ----------
 
