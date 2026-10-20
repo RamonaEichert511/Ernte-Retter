@@ -1,9 +1,7 @@
 from datetime import date, datetime
 from typing import Literal, Optional
 
-import re
-
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field
 
 Einheit = Literal["kg", "g", "Stück", "Bund", "Liter"]
 Prioritaet = Literal["hoch", "mittel", "niedrig"]
@@ -59,7 +57,6 @@ class UserPublic(BaseModel):
     name: Optional[str] = None
     email: EmailStr
 
-
 # ---------- Profile ("Mein Konto") ----------
 
 
@@ -101,11 +98,9 @@ class ProfilPublic(BaseModel):
     plz: Optional[str] = None
     ueber_mich: Optional[str] = None
 
-
 class Token(BaseModel):
     access_token: str
     token_type: str
-
 
 class ActivityRequest(BaseModel):
     """Body of POST /auth/activity. The server uses its own clock to extend
@@ -228,3 +223,8 @@ class Wecker(BaseModel):
     einlegedatum: date
     fertig_am: datetime
     created_at: datetime
+
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = Field(default=None, min_length=1, max_length=100)
+    password: Optional[str] = Field(default=None, min_length=8, max_length=128)
