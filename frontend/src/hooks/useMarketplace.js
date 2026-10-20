@@ -298,7 +298,40 @@ async function updateAccount(values) {
     setBusy(false);
   }
 }
+async function updateProfile(values) {
+  const token = getToken();
 
+  if (!token || !user) {
+    throw new Error("Bitte melde dich erneut an.");
+  }
+
+  const userId = user.id;
+  setBusy(true);
+
+  try {
+    const profil = await api("/me", {
+      method: "PATCH",
+      body: JSON.stringify({
+        wohnort: values.wohnort.trim(),
+        plz: values.plz.trim(),
+        ueber_mich: values.ueber_mich.trim(),
+      }),
+    });
+
+    // Eine zwischenzeitliche Abmeldung nicht rückgängig machen.
+    if (getToken() === token) {
+      setUser((bisher) =>
+        bisher?.id === userId
+          ? { ...bisher, ...profil }
+          : bisher,
+      );
+    }
+
+    return profil;
+  } finally {
+    setBusy(false);
+  }
+}
 function logout() {
   clearToken();
   localStorage.removeItem("ernte-retter-last-activity");
@@ -355,6 +388,7 @@ function logout() {
     logout,
     refresh,
     updateAccount,
+    updateProfile,
     create: (values) =>
       perform("/offers", { method: "POST", body: JSON.stringify(values) }),
     reserve: (id) => perform(`/offers/${id}/reserve`, { method: "PUT" }),

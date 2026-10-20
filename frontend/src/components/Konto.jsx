@@ -5,7 +5,9 @@ import KontodatenForm from "./KontodatenForm";
 
 export default function Konto({ market, onChat }) {
   const user = market.user;
-    const [profilBearbeiten, setProfilBearbeiten] = useState(false);
+  const [profilBearbeiten, setProfilBearbeiten] = useState(false);
+  const [profilFehler, setProfilFehler] = useState("");
+  const [profilMeldung, setProfilMeldung] = useState("");
 
   const [profilForm, setProfilForm] = useState({
     wohnort: user.wohnort ?? "",
@@ -14,6 +16,9 @@ export default function Konto({ market, onChat }) {
   });
 
   function profilOeffnen() {
+    setProfilFehler("");
+    setProfilMeldung("");
+
     setProfilForm({
       wohnort: user.wohnort ?? "",
       plz: user.plz ?? "",
@@ -31,7 +36,27 @@ export default function Konto({ market, onChat }) {
       [name]: value,
     }));
   }
+  async function profilSpeichern(event) {
+    event.preventDefault();
 
+    if (market.busy) return;
+
+    setProfilFehler("");
+    setProfilMeldung("");
+
+    try {
+      await market.updateProfile(profilForm);
+
+      setProfilBearbeiten(false);
+      setProfilMeldung("Dein Profil wurde gespeichert.");
+    } catch (error) {
+      setProfilFehler(
+        error.status === 401
+          ? "Bitte melde dich erneut an."
+          : error.message || "Dein Profil konnte nicht gespeichert werden.",
+      );
+    }
+  }  
   const eigeneInserate = market.offers.filter(
     (offer) => offer.owner_id === user.id,
   );
@@ -94,15 +119,20 @@ export default function Konto({ market, onChat }) {
           </button>
         </div>
       </header>
+      {profilMeldung && (
+        <p className="form-hint" role="status">
+          {profilMeldung}
+        </p>
+      )}
     {profilBearbeiten && (
       <>
         <KontodatenForm market={market} />
         
         <form
           id="konto-profilformular"
-          className="konto-profilformular"
+          className="konto-profilformular"          
           aria-labelledby="konto-profilformular-titel"
-          onSubmit={(event) => event.preventDefault()}
+          onSubmit={profilSpeichern}
         >
           <div>
             <h3 id="konto-profilformular-titel">
@@ -131,6 +161,7 @@ export default function Konto({ market, onChat }) {
                 value={profilForm.plz}
                 onChange={profilAendern}
                 aria-describedby="konto-profil-hinweis"
+                disabled={market.busy}
               />
             </label>
 
@@ -146,6 +177,7 @@ export default function Konto({ market, onChat }) {
                 value={profilForm.wohnort}
                 onChange={profilAendern}
                 aria-describedby="konto-profil-hinweis"
+                disabled={market.busy}
               />
             </label>
           </div>
@@ -161,6 +193,7 @@ export default function Konto({ market, onChat }) {
               value={profilForm.ueber_mich}
               onChange={profilAendern}
               aria-describedby="konto-profil-hinweis konto-textlaenge"
+              disabled={market.busy}
             />
           </label>
 
@@ -168,25 +201,26 @@ export default function Konto({ market, onChat }) {
             {profilForm.ueber_mich.length} / 1.000 Zeichen
           </span>
 
-          <p className="form-hint" id="konto-speicher-hinweis">
-            Das Speichern ist noch nicht verfügbar. Deine Eingaben
-            werden bisher nicht gespeichert.
-          </p>
+          {profilFehler && (
+            <p className="form-error" role="alert">
+              {profilFehler}
+            </p>
+          )}
 
           <div className="konto-profil-aktionen">
             <button
               type="submit"
               className="mein-button"
-              disabled
-              aria-describedby="konto-speicher-hinweis"
+              disabled={market.busy}
             >
-              Speichern
+              {market.busy ? "Wird gespeichert …" : "Speichern"}
             </button>
 
             <button
               type="button"
               className="secondary-button"
               onClick={() => setProfilBearbeiten(false)}
+              disabled={market.busy}
             >
               Abbrechen
             </button>
