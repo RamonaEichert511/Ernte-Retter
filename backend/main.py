@@ -614,6 +614,38 @@ def inbox(current_user: dict = Depends(get_current_user)):
         ).fetchall()
     return sorted(rows, key=lambda r: r["letzte_zeit"], reverse=True)
 
+@app.delete("/offers/{offer_id}/nachrichten", status_code=status.HTTP_204_NO_CONTENT)
+def delete_nachrichten(
+    offer_id: int,
+    mit: Optional[int] = None,
+    current_user: dict = Depends(get_current_user),
+):
+    me = current_user["id"]
+    with db() as conn:
+        # Check if the offer exists
+        offer = conn.execute(
+            "SELECT owner_id FROM offers WHERE id = %s", (offer_id,)
+        ).fetchone()
+        if offer is None:
+            raise HTTPException(status_code=404, detail="Offer not found")
+            
+        # If the current user is the owner, they must specify who they want to delete the chat with
+        if mit is None:
+            if me == offer["owner_id"]:
+                raise HTTPException(
+                    status_code=422, detail="Parameter 'mit' fehlt"
+                )
+            mit = offer["owner_id"]
+
+        # Use the existing _zwischen helper to find messages between 'me' and 'mit'
+        bedingung, params = _zwischen(offer_id, me, mit)
+        
+        # Delete the messages for this conversation
+        conn.execute(
+            f"DELETE FROM nachrichten WHERE {bedingung}",
+            params,
+        )
+
 
 # ---------- Aufgaben ----------
 
