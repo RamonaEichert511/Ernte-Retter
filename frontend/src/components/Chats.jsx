@@ -10,6 +10,7 @@ export default function Chats({ user, initialConversation = null }) {
   const [loadingInbox, setLoadingInbox] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const [inboxError, setInboxError] = useState("");
   const [chatError, setChatError] = useState("");
   const [reload, setReload] = useState(0);
@@ -17,6 +18,7 @@ export default function Chats({ user, initialConversation = null }) {
   const endRef = useRef(null);
   const selectionRef = useRef(null);
   const sendingRef = useRef(false);
+  const removingRef = useRef(false);
 
   const conversationKey = selected
     ? `${selected.offer_id}:${selected.partner_id}`
@@ -25,24 +27,18 @@ export default function Chats({ user, initialConversation = null }) {
   selectionRef.current = conversationKey;
 
   useEffect(() => {
-  if (!user) return;
+    if (!user) return;
 
-  const refreshChats = () => {
-    setReload((previous) => previous + 1);
-  };
+    const refreshChats = () => {
+      setReload((previous) => previous + 1);
+    };
 
-  window.addEventListener(
-    "ernte-retter:new-message",
-    refreshChats,
-  );
+    window.addEventListener("ernte-retter:new-message", refreshChats);
 
-  return () => {
-    window.removeEventListener(
-      "ernte-retter:new-message",
-      refreshChats,
-    );
-  };
-}, [user?.id]);
+    return () => {
+      window.removeEventListener("ernte-retter:new-message", refreshChats);
+    };
+  }, [user?.id]);
   // Gesprächsübersicht laden.
   useEffect(() => {
     if (!user) return;
@@ -95,9 +91,7 @@ export default function Chats({ user, initialConversation = null }) {
 
         if (!controller.signal.aborted) {
           setMessages(data);
-          window.dispatchEvent(
-            new Event("ernte-retter:messages-read"),
-          );
+          window.dispatchEvent(new Event("ernte-retter:messages-read"));
 
           setConversations((previous) =>
             previous.map((conversation) =>
@@ -129,6 +123,7 @@ export default function Chats({ user, initialConversation = null }) {
   }, [messages]);
 
   function openConversation(conversation) {
+    if (removingRef.current) return;
     if (
       selected?.offer_id === conversation.offer_id &&
       selected?.partner_id === conversation.partner_id
@@ -151,7 +146,8 @@ export default function Chats({ user, initialConversation = null }) {
       !selected ||
       !messageText ||
       messageText.length > 2000 ||
-      sendingRef.current
+      sendingRef.current ||
+      removingRef.current
     ) {
       return;
     }
@@ -186,7 +182,63 @@ export default function Chats({ user, initialConversation = null }) {
       setSending(false);
     }
   }
+  async function removeConversation() {
+    if (!selected || removingRef.current || sendingRef.current) return;
 
+    const confirmed = window.confirm(
+      "Dieses Gespräch aus deiner Chatliste entfernen? " +
+        "Beim Gesprächspartner bleibt es erhalten.",
+    );
+
+    if (!confirmed) return;
+
+    const conversation = selected;
+    const removedKey = `${conversation.offer_id}:${conversation.partner_id}`;
+
+    removingRef.current = true;
+    setRemoving(true);
+    setChatError("");
+
+    try {
+      await api(
+        `/offers/${conversation.offer_id}/nachrichten` +
+          `?mit=${conversation.partner_id}`,
+        { method: "DELETE" },
+      );
+
+      setConversations((previous) =>
+        previous.filter(
+          (entry) =>
+            !(
+              entry.offer_id === conversation.offer_id &&
+              entry.partner_id === conversation.partner_id
+            ),
+        ),
+      );
+
+      if (selectionRef.current === removedKey) {
+        setSelected(null);
+        setMessages([]);
+        setText("");
+        setLoadingMessages(false);
+      }
+
+      setReload((previous) => previous + 1);
+
+      window.dispatchEvent(new Event("ernte-retter:messages-read"));
+    } catch (error) {
+      if (selectionRef.current === removedKey) {
+        setChatError(
+          [404, 405, 501].includes(error.status)
+            ? "Das Entfernen von Gesprächen ist im Backend noch nicht verfügbar."
+            : `Das Gespräch konnte nicht entfernt werden: ${error.message}`,
+        );
+      }
+    } finally {
+      removingRef.current = false;
+      setRemoving(false);
+    }
+  }
   function formatDate(value) {
     return new Date(value).toLocaleString("de-DE", {
       day: "2-digit",
@@ -212,15 +264,6 @@ export default function Chats({ user, initialConversation = null }) {
     <section className="chats" aria-labelledby="chats-heading">
       <div className="chats-header">
         <h2 id="chats-heading">Meine Chats</h2>
-
-        <button
-          type="button"
-          className="secondary-button"
-          disabled={loadingInbox || loadingMessages || sending}
-          onClick={() => setReload((previous) => previous + 1)}
-        >
-          Aktualisieren
-        </button>
       </div>
 
       {inboxError && (
@@ -235,14 +278,12 @@ export default function Chats({ user, initialConversation = null }) {
 
           {loadingInbox && <p role="status">Gespräche werden geladen …</p>}
 
-          {!loadingInbox &&
-            !inboxError &&
-            conversations.length === 0 && (
-              <p>
-                Noch keine Gespräche. Über „Nachricht schreiben“ an einem
-                Inserat kannst du Kontakt aufnehmen.
-              </p>
-            )}
+          {!loadingInbox && !inboxError && conversations.length === 0 && (
+            <p>
+              Noch keine Gespräche. Über „Nachricht schreiben“ an einem Inserat
+              kannst du Kontakt aufnehmen.
+            </p>
+          )}
 
           <ul className="chats-list">
             {conversations.map((conversation) => {
@@ -251,13 +292,12 @@ export default function Chats({ user, initialConversation = null }) {
                 selected?.partner_id === conversation.partner_id;
 
               return (
-                <li
-                  key={`${conversation.offer_id}-${conversation.partner_id}`}
-                >
+                <li key={`${conversation.offer_id}-${conversation.partner_id}`}>
                   <button
                     type="button"
                     className={`chat-preview ${active ? "is-active" : ""}`}
                     aria-current={active ? "true" : undefined}
+                    disabled={removing}
                     onClick={() => openConversation(conversation)}
                   >
                     <strong>{conversation.offer_title}</strong>
@@ -284,6 +324,19 @@ export default function Chats({ user, initialConversation = null }) {
               <header>
                 <h3>{selected.offer_title}</h3>
                 <p>Gespräch mit {selected.partner_name}</p>
+
+                <button
+                  type="button"
+                  className="secondary-button chat-remove-button"
+                  onClick={removeConversation}
+                  disabled={
+                    removing || sending || loadingMessages || loadingInbox
+                  }
+                >
+                  {removing
+                    ? "Wird entfernt …"
+                    : "Aus meiner Chatliste entfernen"}
+                </button>
               </header>
 
               {chatError && (
@@ -313,9 +366,7 @@ export default function Chats({ user, initialConversation = null }) {
                           key={message.id}
                           className={`chat-message ${own ? "is-own" : ""}`}
                         >
-                          <strong>
-                            {own ? "Du" : selected.partner_name}
-                          </strong>
+                          <strong>{own ? "Du" : selected.partner_name}</strong>
 
                           <p style={{ whiteSpace: "pre-wrap" }}>
                             {message.text}
@@ -344,13 +395,15 @@ export default function Chats({ user, initialConversation = null }) {
                   maxLength={2000}
                   rows={3}
                   required
-                  disabled={sending}
+                  disabled={sending || removing}
                 />
 
                 <button
                   type="submit"
                   className="mein-button"
-                  disabled={sending || loadingMessages || !text.trim()}
+                  disabled={
+                    sending || removing || loadingMessages || !text.trim()
+                  }
                 >
                   {sending ? "Wird gesendet …" : "Nachricht senden"}
                 </button>
