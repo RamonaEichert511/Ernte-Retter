@@ -263,6 +263,41 @@ const result = await api("/login", {
     setBusy(false);
   }
 }
+async function updateAccount(values) {
+  if (!getToken()) {
+    throw new Error("Bitte melde dich erneut an.");
+  }
+
+  setBusy(true);
+
+  try {
+    await api("/me", {
+      method: "PUT",
+      body: JSON.stringify(values),
+    });
+
+    // Den Namen sofort im gemeinsamen User-State aktualisieren.
+    // Das Passwort wird dort nicht gespeichert.
+    if (values.name !== undefined) {
+      setUser((bisher) =>
+        bisher
+          ? { ...bisher, name: values.name }
+          : bisher,
+      );
+
+      // Auch den Namen bei bereits geladenen eigenen Inseraten ändern.
+      setOffers((bisher) =>
+        bisher.map((offer) =>
+          offer.owner_id === user.id
+            ? { ...offer, owner_name: values.name }
+            : offer,
+        ),
+      );
+    }
+  } finally {
+    setBusy(false);
+  }
+}
 
 function logout() {
   clearToken();
@@ -319,6 +354,7 @@ function logout() {
     authenticate,
     logout,
     refresh,
+    updateAccount,
     create: (values) =>
       perform("/offers", { method: "POST", body: JSON.stringify(values) }),
     reserve: (id) => perform(`/offers/${id}/reserve`, { method: "PUT" }),
