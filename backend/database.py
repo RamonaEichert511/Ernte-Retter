@@ -33,9 +33,18 @@ def init_db():
                 email_verified BOOLEAN NOT NULL DEFAULT FALSE,
                 verify_token_hash TEXT,
                 verify_expires TIMESTAMPTZ,
+                wohnort TEXT,
+                plz TEXT,
+                ueber_mich TEXT,
                 created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
             )
             """
+        )
+        # optional profile fields (existing accounts keep all their data)
+        conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS wohnort TEXT")
+        conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS plz TEXT")
+        conn.execute(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS ueber_mich TEXT"
         )
         # for databases where the users table already existed: accounts
         # created before email verification count as verified, so nobody
@@ -55,6 +64,27 @@ def init_db():
         conn.execute(
             "CREATE UNIQUE INDEX IF NOT EXISTS users_email_lower_idx "
             "ON users (LOWER(email))"
+        )
+
+        # ---------- sessions (one row per login / device) ----------
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS sessions (
+                id TEXT PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                last_activity_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                ended_at TIMESTAMPTZ
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS sessions_user_idx ON sessions (user_id)"
+        )
+        # tidy up: sessions that have been dead for a while are not needed
+        conn.execute(
+            "DELETE FROM sessions WHERE last_activity_at < NOW() - INTERVAL '7 days' "
+            "OR ended_at < NOW() - INTERVAL '1 day'"
         )
 
         # ---------- offers (Ernte teilen) ----------

@@ -1,7 +1,9 @@
 from datetime import date, datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, EmailStr, Field
+import re
+
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 Einheit = Literal["kg", "g", "Stück", "Bund", "Liter"]
 Prioritaet = Literal["hoch", "mittel", "niedrig"]
@@ -58,9 +60,58 @@ class UserPublic(BaseModel):
     email: EmailStr
 
 
+# ---------- Profile ("Mein Konto") ----------
+
+
+class UserMe(UserPublic):
+    """Own account data, including the optional profile fields."""
+
+    wohnort: Optional[str] = None
+    plz: Optional[str] = None
+    ueber_mich: Optional[str] = None
+
+
+class ProfilUpdate(BaseModel):
+    """PATCH /me: only the fields that are sent are changed. An empty text
+    (or null) removes the saved value."""
+
+    wohnort: Optional[str] = Field(default=None, max_length=100)
+    plz: Optional[str] = None
+    ueber_mich: Optional[str] = Field(default=None, max_length=1000)
+
+    @field_validator("wohnort", "plz", "ueber_mich", mode="before")
+    @classmethod
+    def _strip(cls, v):
+        return v.strip() if isinstance(v, str) else v
+
+    @field_validator("plz")
+    @classmethod
+    def _plz_pruefen(cls, v):
+        if v and not re.fullmatch(r"[0-9]{5}", v):
+            raise ValueError("PLZ muss leer sein oder aus 5 Ziffern bestehen")
+        return v
+
+
+class ProfilPublic(BaseModel):
+    """Public profile: no email and no other private account data."""
+
+    id: int
+    name: Optional[str] = None
+    wohnort: Optional[str] = None
+    plz: Optional[str] = None
+    ueber_mich: Optional[str] = None
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+class ActivityRequest(BaseModel):
+    """Body of POST /auth/activity. The server uses its own clock to extend
+    the session, so this client time is accepted but not trusted."""
+
+    last_activity_at: Optional[datetime] = None
 
 
 class VerifyRequest(BaseModel):
@@ -177,8 +228,3 @@ class Wecker(BaseModel):
     einlegedatum: date
     fertig_am: datetime
     created_at: datetime
-
-
-class UserUpdate(BaseModel):
-    name: Optional[str] = Field(default=None, min_length=1, max_length=100)
-    password: Optional[str] = Field(default=None, min_length=8, max_length=128)

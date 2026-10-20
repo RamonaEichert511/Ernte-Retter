@@ -3,9 +3,6 @@ import os
 import secrets
 from contextlib import asynccontextmanager
 from typing import Optional
-from fastapi import WebSocket, WebSocketDisconnect
-import jwt
-from auth import SECRET_KEY, ALGORITHM
 
 import psycopg.errors
 from fastapi import (
@@ -21,11 +18,15 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from auth import (
     create_access_token,
+    create_session,
+    end_session,
     get_current_user,
     hash_password,
+    touch_session,
     verify_password,
 )
 from creation.schemas import (
+    ActivityRequest,
     Aufgabe,
     AufgabeCreate,
     Favorit,
@@ -35,17 +36,19 @@ from creation.schemas import (
     NachrichtCreate,
     Offer,
     OfferCreate,
+    ProfilPublic,
+    ProfilUpdate,
     Rezept,
     RezeptCreate,
     Rezeptkategorie,
     ResendRequest,
     Token,
     UserCreate,
+    UserMe,
     UserPublic,
     VerifyRequest,
     Wecker,
     WeckerCreate,
-    UserUpdate,
 )
 from database import db, init_db
 from email_service import (
@@ -77,48 +80,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["Authorization", "Content-Type"],
 )
-#--------- web socket class definition --------------
 
-# 1. Define the ConnectionManager class
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: dict[int, list[WebSocket]] = {}
-
-    async def connect(self, user_id: int, websocket: WebSocket):
-        await websocket.accept()
-        if user_id not in self.active_connections:
-            self.active_connections[user_id] = []
-        self.active_connections[user_id].append(websocket)
-
-    def disconnect(self, user_id: int, websocket: WebSocket):
-        if user_id in self.active_connections:
-            self.active_connections[user_id].remove(websocket)
-            if not self.active_connections[user_id]:
-                del self.active_connections[user_id]
-
-    async def send_personal_message(self, user_id: int, message: dict):
-        if user_id in self.active_connections:
-            for connection in self.active_connections[user_id]:
-                await connection.send_json(message)
-
-# 2. Instantiate the manager globally so it can be used everywhere in main.py
-manager = ConnectionManager()
-
-# -----------------jwt --------------------
-
-from jwt.exceptions import InvalidTokenError
-
-def get_user_from_token(token: str) -> Optional[dict]:
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = int(payload["sub"])
-    except (InvalidTokenError, KeyError, ValueError):
-        return None
-
-    with db() as conn:
-        return conn.execute(
-            "SELECT id, name, email FROM users WHERE id = %s", (user_id,)
-        ).fetchone()
 
 # ---------- Auth ----------
 
@@ -225,36 +187,87 @@ def login(data: OAuth2PasswordRequestForm = Depends()):
             detail="E-Mail-Adresse ist noch nicht bestätigt",
         )
 
+    # every login starts its own session (one per device)
+    session_id = create_session(row["id"])
     return {
-        "access_token": create_access_token(row["id"]),
+        "access_token": create_access_token(row["id"], session_id),
         "token_type": "bearer",
     }
 
 
-@app.get("/me", response_model=UserPublic)
-def get_me(current_user: UserPublic = Depends(get_current_user)):
-    return current_user
+@app.post("/auth/activity", response_model=Token)
+def auth_activity(
+    data: Optional[ActivityRequest] = None,
+    current_user: dict = Depends(get_current_user),
+):
+    """Explicit activity report from the frontend: extends the session and
+    returns a renewed token. get_current_user already rejects expired or
+    ended sessions with 401; touch_session checks again atomically."""
+    if not touch_session(current_user["session_id"]):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session expired",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return {
+        "access_token": create_access_token(
+            current_user["id"], current_user["session_id"]
+        ),
+        "token_type": "bearer",
+    }
 
-@app.put("/me", response_model=UserPublic)
-def update_me(data: UserUpdate, current_user: dict = Depends(get_current_user)):
+
+@app.post("/auth/logout", status_code=status.HTTP_204_NO_CONTENT)
+def auth_logout(current_user: dict = Depends(get_current_user)):
+    end_session(current_user["session_id"])
+
+
+# ---------- Profile ("Mein Konto") ----------
+
+# the only profile fields a user can change (also protects the column names)
+PROFILFELDER = ("wohnort", "plz", "ueber_mich")
+
+ME_SELECT = (
+    "SELECT id, name, email, wohnort, plz, ueber_mich FROM users "
+    "WHERE id = %s"
+)
+
+
+@app.get("/me", response_model=UserMe)
+def get_me(current_user: dict = Depends(get_current_user)):
     with db() as conn:
-        updates = []
-        params = []
-        if data.name is not None:
-            updates.append("name = %s")
-            params.append(data.name.strip())
-        if data.password is not None:
-            updates.append("password_hash = %s")
-            params.append(hash_password(data.password))
-        
-        if not updates:
-            return current_user
+        return conn.execute(ME_SELECT, (current_user["id"],)).fetchone()
 
-        params.append(current_user["id"])
+
+@app.patch("/me", response_model=UserMe)
+def update_me(
+    data: ProfilUpdate, current_user: dict = Depends(get_current_user)
+):
+    # only fields that were sent; an empty text or null removes the value
+    gesendet = data.model_dump(exclude_unset=True)
+    felder = [f for f in PROFILFELDER if f in gesendet]
+    with db() as conn:
+        if felder:
+            conn.execute(
+                "UPDATE users SET "
+                + ", ".join(f"{f} = %s" for f in felder)
+                + " WHERE id = %s",
+                (*[gesendet[f] or None for f in felder], current_user["id"]),
+            )
+        return conn.execute(ME_SELECT, (current_user["id"],)).fetchone()
+
+
+@app.get("/users/{user_id}/profile", response_model=ProfilPublic)
+def get_public_profile(user_id: int):
+    # no login required; only public fields are selected
+    with db() as conn:
         row = conn.execute(
-            f"UPDATE users SET {', '.join(updates)} WHERE id = %s RETURNING id, name, email",
-            tuple(params)
+            "SELECT id, name, wohnort, plz, ueber_mich FROM users "
+            "WHERE id = %s",
+            (user_id,),
         ).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="User not found")
         return row
 
 
@@ -361,8 +374,8 @@ def withdraw_reservation(
     with db() as conn:
         row = conn.execute(
             "UPDATE offers SET status = 'verfügbar', reserved_by = NULL "
-            "WHERE id = %s AND (reserved_by = %s OR owner_id= %s) RETURNING id",
-            (offer_id, current_user["id"], current_user["id"]),
+            "WHERE id = %s AND reserved_by = %s RETURNING id",
+            (offer_id, current_user["id"]),
         ).fetchone()
         if row is not None:
             return conn.execute(
@@ -458,20 +471,6 @@ def send_nachricht(
                 background_tasks.add_task(
                     send_email, empfaenger["email"], subject, body
                 )
-
-        # Trigger the WebSocket notification asynchronously via background tasks
-        background_tasks.add_task(
-            manager.send_personal_message,
-            partner,
-            {
-                "type": "new_message",
-                "id": row["id"],
-                "offer_id": offer_id,
-                "sender_id": me,
-                "text": text,
-            },
-        )
-
         return row
 
 
@@ -747,44 +746,3 @@ def delete_wecker(
         ).fetchone()
         if row is None:
             raise HTTPException(status_code=404, detail="Wecker not found")
-
-#------- web socket -------------
-
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: dict[int, list[WebSocket]] = {}
-
-    async def connect(self, user_id: int, websocket: WebSocket):
-        await websocket.accept()
-        if user_id not in self.active_connections:
-            self.active_connections[user_id] = []
-        self.active_connections[user_id].append(websocket)
-
-    def disconnect(self, user_id: int, websocket: WebSocket):
-        if user_id in self.active_connections:
-            self.active_connections[user_id].remove(websocket)
-            if not self.active_connections[user_id]:
-                del self.active_connections[user_id]
-
-    async def notify_user(self, user_id: int, data: dict):
-        if user_id in self.active_connections:
-            for connection in self.active_connections[user_id]:
-                await connection.send_json(data)
-
-@app.websocket("/ws/notifications")
-async def websocket_notifications(websocket: WebSocket, token: str = Query(...)):
-    try:
-        # Token validieren
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = int(payload["sub"])
-    except (InvalidTokenError, KeyError, ValueError):
-        await websocket.close(code=4001)
-        return
-
-    await manager.connect(user_id, websocket)
-    try:
-        while True:
-            # Verbindung offen halten und auf eingehende Pings/Nachrichten lauschen falls nötig
-            data = await websocket.receive_text()
-    except WebSocketDisconnect:
-        manager.disconnect(user_id, websocket)
