@@ -240,9 +240,6 @@ def login(data: OAuth2PasswordRequestForm = Depends()):
     }
 
 
-@app.get("/me", response_model=UserPublic)
-def get_me(current_user: UserPublic = Depends(get_current_user)):
-    return current_user
 
 @app.put("/me", response_model=UserPublic)
 def update_me(data: UserUpdate, current_user: dict = Depends(get_current_user)):
