@@ -1,5 +1,5 @@
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { api, getToken } from "./services/api";
 import Navbar from "./components/Navbar";
 import Home from "./components/Home";
@@ -50,6 +50,32 @@ const readView = () => {
   const [searchRequest, setSearchRequest] = useState(null);
   const market = useMarketplace();
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [messageToast, setMessageToast] = useState(false);
+const toastTimer = useRef(null);
+
+function closeMessageToast() {
+  window.clearTimeout(toastTimer.current);
+  setMessageToast(false);
+}
+
+function showMessageToast() {
+  window.clearTimeout(toastTimer.current);
+  setMessageToast(true);
+
+  toastTimer.current = window.setTimeout(() => {
+    setMessageToast(false);
+  }, 6000);
+}
+
+// Bei Kontowechsel oder Logout den Hinweis entfernen.
+useEffect(() => {
+  setMessageToast(false);
+  window.clearTimeout(toastTimer.current);
+
+  return () => {
+    window.clearTimeout(toastTimer.current);
+  };
+}, [market.user?.id]);
 
 useEffect(() => {
   setUnreadMessages(0);
@@ -143,6 +169,7 @@ useEffect(() => {
 
         if (notification.type === "new_message") {
           void updateUnreadMessages();
+          showMessageToast();
 
           window.dispatchEvent(
             new Event("ernte-retter:new-message"),
@@ -374,6 +401,35 @@ useEffect(() => {
       >
         Zum Inhalt
       </a>
+      {messageToast && market.user && (
+        <div className="message-toast">
+          <button
+            type="button"
+            className="message-toast-open"
+            onClick={() => {
+              closeMessageToast();
+              setChatTarget(null);
+              window.location.hash = "chats";
+            }}
+          >
+            <span aria-hidden="true">✉️</span>
+
+            <span>
+              <strong role="status">Neue Nachricht erhalten</strong>
+              <span>Hier klicken, um deine Chats zu öffnen.</span>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            className="message-toast-close"
+            aria-label="Benachrichtigung schließen"
+            onClick={closeMessageToast}
+          >
+            ×
+          </button>
+        </div>
+      )}
       <Navbar
         darkMode={darkMode}
         toggleDarkMode={toggleDarkMode}
