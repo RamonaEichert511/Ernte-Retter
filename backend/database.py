@@ -506,8 +506,63 @@ def init_db():
                 ),
                 "kategorie": "haltbarmachen",
         },
-        
-        ]
+        {
+            "slug": "SalatgurkenEingelegt",
+            "title": "Eingelegte Salatgurken",
+            "beschreibung": "Rezept reicht für: 5 Gläser a ca. 600 ml. Salatgurken selber ganz einfach und schnell einlegen. ",
+            "zutaten": [
+                "6 große Salatgurken",
+                "2 große Zwiebeln",
+                "BASIS SUD:",
+                "500 g Apfelessig",
+                "500 g Wasser",
+                "100 g Zucker",
+                "20 g Salz",
+                "KLASSISCHE GEWÜRZE:",
+                "1 TL schwarze Pfefferkörner ",
+                "1 TL Dill, getrocknet",
+                "5 Lorbeerblätter ",
+                "2 TL Senfkörner  ",
+                "1/2 TL Chilipulver ",
+                "5 Wacholderbeeren",
+            ],
+            "vorbereitung": (
+                "Salatgurken grob schälen, entkernen und in 7 mm dicke – oder nach Belieben – Scheiben schneiden/hobeln."
+                "Zwiebeln sehr fein hobeln."
+                "Gläser säubern und heiß ausspülen, ebenso die Deckel und den Einfülltrichter (falls vorhanden)."
+
+            ),
+            "schritte": [
+                "Gurken und Zwiebeln in eine große saubere Schüssel geben und mit sauberen Händen gut vermischen, "
+                "dann dicht in die sterilisierten Gläser füllen."
+                "Alle Zutaten für den Sud in einen Topf geben und aufkochen und 1 Minute kochen lassen. "
+            ],
+            "fertigstellung": (
+                "Den heißen Sud bis zum Rand in die Gläser füllen und die Gläser sofort verschließen. "
+                "Die Gurken sind bereits nach 2 bis 3 Tagen genussbereit. "
+            ),
+            "tipps": (
+                "Würze nach Geschmack"
+                " Das Gute beim selber Einmachen ist nicht nur, dass man weiß was drin ist, man kann das Ganze auch so würzen, wie es einem schmeckt. "
+                "Wenn man nicht so experimentierfreudig ist, kann man bei klassischen Gurkengewürzen wie Dill, Senfkörnern, Wacholder und Lorbeer bleiben. "
+
+                "Kreative Würz-ideen wären: "
+                    "- Ingwer, Kurkuma, Knoblauch, Chilli"
+                    "- Pfeffer, Zimt, Wacholder "
+                    "- Honig statt Zucker "
+                "... oder einfach das, was dir schmeckt. "
+                "Ob Frische oder getrocknete Gewürze/Kräuter genommen werden, ist egal. "
+                "Wenn du einen großen Schwung zubereiten möchtest mit verschiedenen Geschmacksrichtungen, koche den Basis-Sud und fülle die Gewürze direkt ins Glas. "
+                "Bei der Zuckermenge kannst du Variieren.  So wie es im Rezept steht, ist es eher saurer, falls du es süßer magst, gib etwas mehr Zucker hinzu und probiere den Sud vor dem einfüllen. "
+                "Bei der Wahl der Zwiebeln hast du freie Wahl. "
+                "Ich nehme sehr gerne Rote Zwiebeln,der Sud bekommt eine schön rosa Farbe. "
+                "die eingelegten Zwiebeln schmecken auch wunderbar, Mild und nicht zu intensiv nach Zwiebel, so essen wir sie am Liebsten. "
+                "auch die kinder verziehen nicht das Gesicht wenn sie mal eine erwischen. "
+
+            ),
+            "kategorie": "haltbarmachen",
+        }
+    ]
 
         # Gleichzeitige Starts dürfen keine doppelten Rezepte anlegen.
         conn.execute("LOCK TABLE rezepte IN SHARE ROW EXCLUSIVE MODE")
