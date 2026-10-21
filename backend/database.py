@@ -468,7 +468,8 @@ def init_db():
           {
                 "slug": "zucchiniRelish",
                 "title": "Zucchini Relish",
-                "beschreibung": "",
+                "beschreibung": "Süß-saures Zucchini-Relish mit feinen Gemüsestückchen – lecker aufs Brot oder als würzige Beilage. "
+                "So schmeckt die Zucchiniernte auch später noch!",
                 "zutaten": [
                     "3 kg Zucchini",
                     "500 g Zwiebeln",
