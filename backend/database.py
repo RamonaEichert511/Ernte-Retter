@@ -425,7 +425,87 @@ def init_db():
 
                ),
                "kategorie": "haltbarmachen",
-           },           
+           },
+           {      
+               "slug": "zucchiniChutney",
+               "title": "Zucchini Chutney",
+               "beschreibung": "Würziges Zucchini-Chutney mit einer süß-sauren Note und leichter Schärfe – lecker zu Käse, Fleisch oder Gemüse. Perfekt, um die Zucchiniernte zu verwerten! ",
+               "zutaten": [
+                  "3 kg Zucchini",
+                  "1 kg Zwiebeln",
+                  "100 -150 g Salz",
+                  "800 ml Weißweinessig",
+                  "400 g Zucker ",
+                  "3 -5 klein geschnittene Chilischoten",
+                  "3 EL geschrotete Senfkörner",
+                  "4 EL Kurkuma(gemahlen)",
+                  "2 EL Dill(gehackt)",
+
+                  
+              ],
+              "vorbereitung": (
+                   " Zucchini reiben und Zwiebeln in kleine Würfel schneiden, mit Salz mischen und 2-3 Stunden ziehen lassen. "
+               ),
+              "schritte": [
+                  "1. Essig, Zucker, Chili, Senf und Kurkuma aufkochen. "
+                  "Zucchini, Zwiebeln und das gezogene Wasser dazugeben und ungefähr 15 Minuten kochen lassen. "
+                  "Dann den Dill dazugeben. "
+                   ],
+              "fertigstellung": (
+                  "Zucchinichutney in sterilisierte Gläser füllen und 15 Minuten bei 90°C im Wasserbad einkochen."
+                  ),
+              "tipps": (
+                  "Chutney kommt ursprünglich aus Indien und passt wunderbar zu Fleisch, Gemüse oder Käse."
+                  "Gerade zu Käse finde ich es besonders lecker! Je nach Zutaten schmeckt es süß-sauer, pikant-scharf oder süß-scharf."
+                  "Die Konsistenz erinnert ein bisschen an Püree, wobei fein geschnittenes Obst oder Gemüse meistens die Grundlage bildet."
+
+                   "Bei diesem Zucchini-Chutney ist aber eines wichtig:"
+                   "Die Zwiebeln bitte mit dem Messer fein schneiden und nicht pürieren oder reiben – sonst können sie bitter werden. "
+                   
+              ),
+              "kategorie": "haltbarmachen",
+          },
+          {
+                "slug": "zucchiniRelish",
+                "title": "Zucchini Relish",
+                "beschreibung": "",
+                "zutaten": [
+                    "3 kg Zucchini",
+                    "500 g Zwiebeln",
+                    "500 g Paprika",
+                    "400 g Zucker",
+                    "800 ml Essig",
+                    "600 ml Wasser",
+                    "100 - 150 g Salz",
+                    "8 El Paprika edelsüß",
+                    "2 El Kurkuma (gemahlen)",
+                    "1,5 El Pfeffer (gemörsert)",
+
+                ],
+                "vorbereitung": (
+                    "Zucchini, Zwiebeln und Paprika in Würfel schneiden, mit Salz mischen und 2-3 Stunden ziehen lassen."
+
+                ), 
+                "schritte": [
+                    "Essig, Zucker, Paprika edelsüß, Kurkuma und Pfeffer aufkochen,"
+                    "dann Zucchini, Paprika, Zwiebel, Wasser und das gezogene Wasser dazugeben und ungefähr 15 Minuten kochen lassen."
+                    
+
+                ],
+
+                "fertigstellung": (
+                    "Zucchini Relish in sterilisierte Gläser füllen und 15 Minuten bei 90°C im Wasserbad einkochen. "
+                ),
+                "tipps": (
+                    "Relish kommt ursprünglich aus England und ist eine süß-saure, würzige Soße mit kleinen Obst- oder Gemüsestückchen. "
+                    "Es schmeckt als Brotaufstrich genauso lecker wie als würzige Beilage zum Essen. "
+                    "Wenn es bei der Brotzeit mal wieder schnell gehen muss und der Kühlschrank nicht viel hergibt: "
+                    "Einfach ein Glas Zucchini-Relish aufmachen, aufs Brot damit und genießen! Da darf die Butter auch gerne mal Pause machen. "
+
+                ),
+                "kategorie": "haltbarmachen",
+        },
+        
         ]
 
         # Gleichzeitige Starts dürfen keine doppelten Rezepte anlegen.
