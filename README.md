@@ -167,3 +167,16 @@ Projektvorstellung: 21. Oktober 2026
   - Fix zwischen frontend und backend
   - Chat entfernen button hinzugefügt
   - Impressum 
+
+  #### *21.Oktober*
+######  Bendix:
+  - supportmail “info@ernteretter” eingerichtet (SES, Lambda, IAM, S3)
+
+######  Lee:
+  - Präsentation und Wording 
+
+######  Ramona:
+  - Rezepte einpflegen 
+  - Email bestätigungs fix für registrierung behoben 
+  - Unsere Geschichte umbenannt in vom Beet auf den Teller 
+  - vom Beet auf den Teller in “uns/wir” version umgeschrieben

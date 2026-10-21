@@ -561,7 +561,504 @@ def init_db():
 
             ),
             "kategorie": "haltbarmachen",
-        }
+        },
+        {
+            "slug": "PaprikaSahneHahn",
+            "title": "Paprika-Sahne-Hähnchen",
+            "beschreibung": "Zutaten für 4 Portionen",
+            "zutaten": [
+                "1 Zwiebel",
+                "1 Knoblauchzehe",
+                "600 g Hähnchenbrust",
+                "1 EL Olivenöl",
+                "2 rote Paprika",
+                "2 Tomaten",
+                "200 ml Sahne",
+                "300 ml Milch",
+                "2 EL Tomatenmark",
+                "2 TL Speisestärke",
+                "2 TL Salz",
+                "1 Prise Pfeffer",
+                "1 TL Paprikapulver",
+            ],
+            "vorbereitung": (
+                "Zwiebel und Knoblauch schälen und in kleine Würfel schneiden. "
+                "Paprika und Tomaten waschen und würfeln. "
+                "Hähnchenbrust in mundgerechte Stücke schneiden."
+            ),
+            "schritte": [
+                "1. Olivenöl in einer großen Pfanne erhitzen. "
+                "Zwiebel und Knoblauch darin goldgelb anbraten. "
+                "Hähnchenbrust zugeben und 5 Minuten mitbraten. "
+                "Mit dem Salz bestreuen. "
+                "Paprika und Tomaten zugeben und 3 Minuten mitbraten.",
+
+                "2. Tomatenmark und Speisestärke in die Pfanne rühren. "
+                "Milch und Sahne angießen, Paprikapulver und Pfeffer unterrühren "
+                "und das Hähnchen in der Paprika-Sahne-Soße 5 Minuten köcheln lassen.",
+            ],
+            "fertigstellung": None,
+            "tipps": (
+                "Mehr Gemüse? Zucchini, Brokkoli oder Mais passen gut dazu "
+                "und machen das Familiengericht noch bunter.\n\n"
+                "Frische Kräuter zum Schluss: Ein bisschen gehackte Petersilie "
+                "oder Basilikum geben dem Paprika-Sahne-Hähnchen den letzten Schliff.\n\n"
+                "Am besten passt dazu Reis oder Bandnudeln. "
+                "Kartoffeln oder Kartoffelpüree gehen aber auch."
+            ),
+            "kategorie": "abendessen",
+        },
+        {
+            "slug": "ZucchiniPfanne",
+            "title": "Zucchini-Pfanne",
+            "beschreibung": "Zutaten für 2 Portionen",
+            "zutaten": [
+                "800 g Zucchini",
+                "3 getrocknete Tomaten (oder Tomaten in Öl)",
+                "2 Knoblauchzehen",
+                "2 Tomaten",
+                "Salz",
+                "Olivenöl zum Anbraten",
+            ],
+            "vorbereitung": (
+                "Zucchini gründlich waschen und in mundgerechte Stücke schneiden. "
+                "Bei großen Zucchini eventuell das Kerngehäuse entfernen – "
+                "bei kleinen Exemplaren kann es bleiben."
+            ),
+            "schritte": [
+                "1. Getrocknete und frische Tomaten klein schneiden. "
+                "Minitomaten können im Ganzen verwendet werden. "
+                "Knoblauch schälen und in Scheiben schneiden.",
+
+                "2. Knoblauchscheiben mit Olivenöl in einer Pfanne leicht anbraten. "
+                "Zucchinistücke und Tomaten hinzugeben und etwa 10 Minuten "
+                "unter regelmäßigem Umrühren braten.",
+
+                "3. Die Zucchini-Pfanne nach eigenem Geschmack mit Salz "
+                "und frischen Kräutern abschmecken.",
+            ],
+            "fertigstellung": None,
+            "tipps": (
+                "Lust auf eine Zucchini-Hackfleisch-Pfanne? "
+                "Etwas Hackfleisch und gewürfelte Zwiebeln mit dem Knoblauch "
+                "anbraten und mit Salz und Pfeffer würzen.\n\n"
+                "Geriebener oder gewürfelter Feta passt zum Schluss "
+                "auch wunderbar dazu. So schmeckt die Pfanne "
+                "auch als gebratener Zucchini-Salat."
+            ),
+            "kategorie": "abendessen",
+        },
+        {
+            "slug": "FlammkuchenKuerbisFeta",
+            "title": "Flammkuchen mit Kürbis und Feta",
+            "beschreibung": "Für 1 Blech (ca. 4 Portionen)",
+            "zutaten": [
+                "FÜR DEN TEIG:",
+                "200 g Weizenmehl",
+                "1 TL Salz",
+                "110 ml Wasser",
+                "1 EL Olivenöl",
+                "FÜR DEN BELAG:",
+                "150 g Schmand",
+                "1 TL Thymian",
+                "½ TL Salz",
+                "1 Prise Pfeffer",
+                "150 g Hokkaido-Kürbis (entkernt)",
+                "100 g Feta",
+                "1 rote Zwiebel",
+                "40 g Walnüsse",
+                "2 TL Honig",
+            ],
+            "vorbereitung": (
+                "Mehl, Salz, Wasser und Olivenöl zu einem geschmeidigen Teig "
+                "verkneten. Abgedeckt ruhen lassen, während der Belag "
+                "vorbereitet wird.\n\n"
+                "Kürbis waschen und samt Schale in 1–2 mm dünne Spalten "
+                "schneiden. Zwiebel schälen und in Streifen schneiden."
+            ),
+            "schritte": [
+                "1. Backofen auf 250 °C Ober-/Unterhitze vorheizen. "
+                "Ein Blech mit Backpapier belegen und den Teig darauf "
+                "2–3 mm dünn ausrollen.",
+
+                "2. Schmand, Thymian, Salz und Pfeffer verrühren. "
+                "Den Teig damit bestreichen.",
+
+                "3. Kürbis und Zwiebel darauf verteilen "
+                "und den Feta darüber zerbröseln.",
+
+                "4. Den Flammkuchen zunächst 10 Minuten "
+                "auf der untersten Schiene backen.",
+
+                "5. Walnüsse und Honig vermischen und darauf verteilen. "
+                "Weitere 5–10 Minuten backen, bis die Ränder gebräunt sind.",
+            ],
+            "fertigstellung": None,
+            "tipps": (
+                "Butternut eignet sich ebenfalls, muss aber geschält werden.\n\n"
+                "Für eine herzhafte Variante kannst du Speck "
+                "oder Schinkenwürfel ergänzen."
+            ),
+            "kategorie": "abendessen",
+        },
+        {
+            "slug": "FlammkuchenBirneGorgonzola",
+            "title": "Flammkuchen mit Birne und Gorgonzola",
+            "beschreibung": "Für 1 Blech",
+            "zutaten": [
+                "FÜR DEN TEIG:",
+                "200 g Weizenmehl",
+                "110 ml Wasser",
+                "1 EL Öl",
+                "1 TL Salz",
+                "FÜR DEN BELAG:",
+                "200 g Crème fraîche",
+                "2 TL Honig",
+                "Salz",
+                "Pfeffer",
+                "1 Birne",
+                "1 rote Zwiebel",
+                "125 g Gorgonzola",
+                "Ein paar Walnüsse",
+            ],
+            "vorbereitung": (
+                "Backofen auf 220 °C Ober-/Unterhitze vorheizen "
+                "und ein Backblech einfetten.\n\n"
+                "Birne waschen, das Kerngehäuse entfernen und "
+                "in dünne Scheiben schneiden. Zwiebel schälen, "
+                "halbieren und ebenfalls in feine Scheiben schneiden."
+            ),
+            "schritte": [
+                "1. Mehl, Wasser, Öl und Salz zu einem glatten Teig "
+                "verarbeiten. Auf dem vorbereiteten Blech dünn ausrollen.",
+
+                "2. Crème fraîche mit Honig vermischen "
+                "und mit Salz und Pfeffer abschmecken.",
+
+                "3. Den Teig mit der Creme bestreichen. "
+                "Dabei rundherum etwa 1 cm Rand frei lassen.",
+
+                "4. Birne und Zwiebel darauf verteilen. "
+                "Gorgonzola in kleinen Stücken und anschließend "
+                "die Walnüsse darübergeben.",
+
+                "5. Den Flammkuchen etwa 12–15 Minuten backen, "
+                "bis er goldgelb ist.",
+            ],
+            "fertigstellung": None,
+            "tipps": (
+                "Zum Servieren passt frischer Thymian darüber.\n\n"
+                "Ein Feldsalat eignet sich als Beilage.\n\n"
+                "Die rote Zwiebel kannst du nach Geschmack weglassen."
+            ),
+            "kategorie": "abendessen",
+        },
+        {
+            "slug": "KuerbisgulaschKartoffeln",
+            "title": "Kürbisgulasch mit Kartoffeln",
+            "beschreibung": "Zutaten für 6 Portionen",
+            "zutaten": [
+                "800 g Hokkaido-Kürbis",
+                "500 g Kartoffeln",
+                "400 g gehackte Tomaten",
+                "600 ml Gemüsebrühe",
+                "120 g Erbsen",
+                "1 Möhre",
+                "1 rote Paprika",
+                "1 Zwiebel",
+                "30 g Butter",
+                "1 EL Majoran",
+                "2 TL Paprikapulver (edelsüß)",
+                "Salz und Pfeffer",
+            ],
+            "vorbereitung": (
+                "Kürbis waschen und die Kerne entfernen. "
+                "Die Schale bleibt dran. Kartoffeln, Möhre und Zwiebel "
+                "schälen. Paprika waschen und entkernen.\n\n"
+                "Zwiebel fein schneiden und das übrige Gemüse "
+                "in mundgerechte Stücke schneiden."
+            ),
+            "schritte": [
+                "1. Butter in einer großen Pfanne schmelzen "
+                "und die Zwiebel darin andünsten.",
+
+                "2. Kartoffeln, Möhre und Kürbis dazugeben. "
+                "Mit Paprikapulver, Salz und Pfeffer würzen. "
+                "Alles unter gelegentlichem Rühren etwa 10 Minuten braten.",
+
+                "3. Paprika ergänzen und kurz mitbraten.",
+
+                "4. Gemüsebrühe, gehackte Tomaten und Majoran hinzugeben. "
+                "Das Gulasch etwa 10 Minuten köcheln lassen.",
+
+                "5. Erbsen unterrühren und alles weitere 5 Minuten garen, "
+                "bis das Gemüse weich ist. Nochmals abschmecken.",
+            ],
+            "fertigstellung": None,
+            "tipps": (
+                "Für eine vegane Variante ersetzt du die Butter "
+                "durch Kokosöl.\n\n"
+                "Vorwiegend festkochende Kartoffeln behalten ihre Form besser. "
+                "Mehligkochende Kartoffeln machen das Gulasch sämiger.\n\n"
+                "Ein Klecks Schmand oder Crème fraîche passt zum Servieren."
+            ),
+            "kategorie": "abendessen",
+        },
+        {
+            "slug": "BlumenkohlpuereeFrischkaese",
+            "title": "Blumenkohlpüree mit Frischkäse",
+            "beschreibung": "Zutaten für 4 Portionen",
+            "zutaten": [
+                "750 g Blumenkohl",
+                "3 EL Blumenkohlkochwasser",
+                "3 EL Frischkäse",
+                "½ Limette (Saft, nach Geschmack)",
+                "Petersilie",
+                "Salz",
+                "Pfeffer",
+                "Muskat",
+            ],
+            "vorbereitung": (
+                "Blumenkohl putzen, waschen und in Röschen teilen. "
+                "Petersilie waschen und fein hacken. "
+                "Die halbe Limette auspressen."
+            ),
+            "schritte": [
+                "1. Blumenkohlröschen in einen Topf geben und mit Wasser "
+                "bedecken. Etwas Salz hinzufügen und den Blumenkohl weich kochen.",
+
+                "2. Blumenkohl abgießen und dabei etwas Kochwasser auffangen.",
+
+                "3. Blumenkohl mit einem Kartoffelstampfer zerdrücken.",
+
+                "4. Frischkäse und 3 EL Kochwasser unterrühren, "
+                "bis ein cremiges Püree entsteht.",
+
+                "5. Mit Limettensaft, Salz, Pfeffer und Muskat abschmecken. "
+                "Gehackte Petersilie darüberstreuen.",
+            ],
+            "fertigstellung": None,
+            "tipps": (
+                "Du kannst auch tiefgekühlten Blumenkohl verwenden.\n\n"
+                "Statt Limettensaft eignet sich Zitronensaft.\n\n"
+                "Das Püree passt beispielsweise zu Ofenlachs, Spiegelei, "
+                "Frikadellen oder Falafel.\n\n"
+                "Reste lassen sich im Kühlschrank 2–3 Tage aufbewahren "
+                "oder einfrieren."
+            ),
+            "kategorie": "abendessen",
+        },
+        {
+            "slug": "Blumenkohlsuppe",
+            "title": "Blumenkohlsuppe",
+            "beschreibung": "Zutaten für 4 Portionen",
+            "zutaten": [
+                "1 kg Blumenkohl",
+                "40 g Butter",
+                "40 g Weizenmehl",
+                "750 ml Blumenkohlkochwasser (bei Bedarf mit Wasser ergänzt)",
+                "250 ml Milch",
+                "1 Eigelb",
+                "1 Prise Zucker",
+                "Salz",
+                "Pfeffer",
+                "Muskat",
+            ],
+            "vorbereitung": (
+                "Blumenkohl putzen und waschen. "
+                "In kleine Röschen teilen und den Strunk "
+                "in kleine Stücke schneiden."
+            ),
+            "schritte": [
+                "1. Blumenkohl etwa 10 Minuten in reichlich Salzwasser "
+                "kochen, bis er weich ist.",
+
+                "2. Blumenkohl abgießen und das Kochwasser auffangen. "
+                "Davon 750 ml abmessen und fehlende Flüssigkeit "
+                "mit Wasser ergänzen.",
+
+                "3. Butter in einem Topf schmelzen. Mehl einrühren "
+                "und unter ständigem Rühren nach und nach "
+                "Kochwasser und Milch dazugießen.",
+
+                "4. Die Suppe etwa 5 Minuten köcheln lassen "
+                "und regelmäßig umrühren.",
+
+                "5. Den Topf vom Herd nehmen. Eigelb zunächst mit etwas "
+                "heißer Suppe verquirlen und die Mischung anschließend "
+                "unterrühren. Zucker und Blumenkohl dazugeben. "
+                "Die Suppe danach nicht mehr kochen lassen.",
+
+                "6. Mit Salz, Pfeffer und Muskat abschmecken.",
+            ],
+            "fertigstellung": None,
+            "tipps": (
+                "Für eine feinere Konsistenz kannst du die Suppe "
+                "vor dem Einrühren des Eigelbs pürieren.\n\n"
+                "Als herzhafte Ergänzung passen Schinkenwürfel "
+                "oder klein geschnittene Würstchen."
+            ),
+            "kategorie": "abendessen",
+        },
+        {
+            "slug": "ZucchiniBologneseNudeln",
+            "title": "Zucchini-Bolognese mit Nudeln",
+            "beschreibung": "Zutaten für 5 Portionen",
+            "zutaten": [
+                "400 g Rinderhackfleisch",
+                "250 g Zucchini",
+                "100 g Möhren",
+                "1 Zwiebel",
+                "2 EL Olivenöl",
+                "400 g gehackte Tomaten",
+                "1 EL Tomatenmark",
+                "1 TL italienische Kräuter",
+                "1 TL Salz",
+                "1 Prise Pfeffer",
+                "2 TL Paprikapulver",
+                "1 TL Honig oder Zucker (optional)",
+                "200 ml Nudelkochwasser",
+                "400 g Nudeln",
+                "Geriebener Parmesan zum Servieren",
+            ],
+            "vorbereitung": (
+                "Zucchini waschen. Möhren und Zwiebel schälen "
+                "und das gesamte Gemüse klein würfeln."
+            ),
+            "schritte": [
+                "1. Zwiebel im heißen Olivenöl glasig dünsten. "
+                "Möhren hinzugeben und etwa 3 Minuten mitbraten.",
+
+                "2. Hackfleisch hinzufügen und krümelig durchbraten. "
+                "Zucchini dazugeben und weitere 2–3 Minuten mitbraten.",
+
+                "3. Tomatenmark kurz mitrösten. Gehackte Tomaten ergänzen "
+                "und mit italienischen Kräutern, Salz, Pfeffer "
+                "und Paprikapulver würzen.",
+
+                "4. Nebenbei die Nudeln nach Packungsanleitung "
+                "in Salzwasser kochen. 200 ml Nudelkochwasser "
+                "für die Soße entnehmen.",
+
+                "5. Das Nudelkochwasser zur Soße geben "
+                "und etwa 10 Minuten köcheln lassen. "
+                "Nach Geschmack mit Honig oder Zucker abrunden.",
+
+                "6. Nudeln abgießen, mit der Bolognese vermischen "
+                "und mit geriebenem Parmesan servieren.",
+            ],
+            "fertigstellung": None,
+            "tipps": (
+                "Zum Vorkochen Nudeln und Soße getrennt aufbewahren.\n\n"
+                "Die Soße lässt sich ohne Nudeln einfrieren."
+            ),
+            "kategorie": "abendessen",
+        },
+        {
+            "slug": "HerbsteintopfQuerDurchDenGarten",
+            "title": "Herbsteintopf „Quer durch den Garten“",
+            "beschreibung": "Zutaten für 4 Portionen",
+            "zutaten": [
+                "1,2 Liter Gemüsebrühe",
+                "250 g durchwachsenes Suppenfleisch",
+                "2 festkochende Kartoffeln",
+                "3 Möhren",
+                "1 Zwiebel",
+                "¼ Kopf Wirsing",
+                "¼ Knolle Sellerie",
+                "1 Stange Lauch",
+                "125 g Suppennudeln",
+                "Etwas frische Petersilie",
+                "Salz und Pfeffer",
+            ],
+            "vorbereitung": (
+                "Kartoffeln, Sellerie und Zwiebel schälen und würfeln. "
+                "Möhren putzen und in Scheiben schneiden. "
+                "Wirsing und Lauch waschen und in Streifen "
+                "beziehungsweise Ringe schneiden. Petersilie hacken."
+            ),
+            "schritte": [
+                "1. Gemüsebrühe erhitzen. Suppenfleisch hineingeben "
+                "und etwa 1 Stunde sanft köcheln lassen.",
+
+                "2. Fleisch herausnehmen, überschüssiges Fett entfernen "
+                "und das magere Fleisch klein schneiden. "
+                "Zurück in die Brühe geben.",
+
+                "3. Zwiebel, Kartoffeln, Sellerie und Möhren ergänzen. "
+                "Den Eintopf weitere 30 Minuten köcheln lassen.",
+
+                "4. Nach 15 Minuten Wirsing und Lauch dazugeben. "
+                "Die Suppennudeln entsprechend ihrer Packungskochzeit "
+                "vor Ende der Garzeit hinzufügen.",
+
+                "5. Prüfen, ob Fleisch und Gemüse weich sind. "
+                "Mit Salz und Pfeffer abschmecken "
+                "und den Eintopf mit Petersilie bestreuen.",
+            ],
+            "fertigstellung": None,
+            "tipps": (
+                "Für mehr Flüssigkeit kannst du zusätzliche "
+                "Gemüsebrühe angießen.\n\n"
+                "Erbsen oder Zucchini ergänzen den Eintopf nach Vorrat. "
+                "Auch Mettwürste oder Wiener passen dazu."
+            ),
+            "kategorie": "abendessen",
+        },
+        {
+            "slug": "BirnenBohnenSpeck",
+            "title": "Birnen, Bohnen und Speck",
+            "beschreibung": "Zutaten für 4 Portionen",
+            "zutaten": [
+                "6 kleine, feste Birnen",
+                "2 Zwiebeln",
+                "500 g Schinkenspeck in etwa 3 mm dicken Scheiben",
+                "1 TL schwarze Pfefferkörner",
+                "1 kg grüne Bohnen",
+                "1 Bund Bohnenkraut",
+                "500 g Kartoffeln",
+                "1 gestrichener EL Speisestärke",
+                "1,5 Liter Wasser",
+                "Etwas Butter",
+                "Salz und Pfeffer",
+                "Muskatnuss",
+            ],
+            "vorbereitung": (
+                "Zwiebeln schälen und achteln. Birnen und Bohnen waschen "
+                "und die Bohnenenden entfernen. Kartoffeln schälen "
+                "und würfeln.\n\n"
+                "Bohnenkraut waschen und zusammenbinden. "
+                "Einige Blättchen zum Garnieren beiseitelegen."
+            ),
+            "schritte": [
+                "1. Butter in einem großen Topf schmelzen. "
+                "Speck und Zwiebeln darin kurz anschwitzen.",
+
+                "2. Wasser dazugießen, Pfefferkörner ergänzen "
+                "und alles 10 Minuten köcheln lassen.",
+
+                "3. Kartoffeln hinzugeben. Nach etwa 9 Minuten Bohnen, "
+                "Bohnenkraut und Birnen ergänzen. Alles mindestens "
+                "weitere 10 Minuten garen, bis Bohnen und Kartoffeln weich sind.",
+
+                "4. Das Kräuterbund entfernen. Den Eintopf abgießen "
+                "und die Brühe auffangen.",
+
+                "5. Speisestärke mit etwas abgekühlter Brühe verrühren. "
+                "In die übrige Brühe einrühren und diese aufkochen. "
+                "Mit Salz, Pfeffer und Muskat abschmecken.",
+
+                "6. Speck herausnehmen und separat kurz anbraten. "
+                "Gemüse und Birnen zurück in die Brühe geben. "
+                "Mit Speck und Bohnenkraut servieren.",
+            ],
+            "fertigstellung": None,
+            "tipps": (
+                "Halbierte oder geviertelte Birnen werden schneller weich."
+            ),
+            "kategorie": "abendessen",
+        },
+
     ]
 
         # Gleichzeitige Starts dürfen keine doppelten Rezepte anlegen.
