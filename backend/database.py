@@ -303,7 +303,7 @@ def init_db():
             },
             {
                 "slug": "tomatensosse",
-                "title": "Tomaten soße",
+                "title": "Tomatensoße",
                 "beschreibung": "Leckere Tomatensoße",
                 "zutaten": [
                     "1200 g Tomaten",
@@ -313,7 +313,7 @@ def init_db():
                     "50 g Tomatenmark",
                     "1 TL Salz",
                     "1 TL Rohrohrzucker oder weißer Zucker",
-                    "1 TL Paprika rosenscharf oder milder Paprika oder Chilipulver",
+                    "1 TL Paprika rosenscharf, milder Paprika oder Chilipulver",
                     "1 Handvoll frische oder getrocknete Kräuter z.B. Basilikum, Oregano, Thymian",
                 ],
                 "vorbereitung": (
@@ -351,6 +351,81 @@ def init_db():
                 ),
                 "kategorie": "haltbarmachen",
             },
+            {
+               "slug": "tomatenInOel",
+               "title": "Getrocknete Tomaten in Öl",
+               "beschreibung": "Selbst gemachte getrocknete Tomaten in Öl – Ein Genuss für jede Küche",
+               "zutaten": [
+                   "1 kg Tomaten",
+                   "200 ml hochwertiges Olivenöl",
+                   "2-3 Knoblauchzehen",
+                   "Gewürze nach Wahl (z. B. Oregano, Basilikum, Pfeffer, Salz)",
+               ],
+               "vorbereitung": (
+                    "Tomaten vorbereiten: Waschen Sie die Tomaten gründlich und schneiden Sie "
+                    "sie in Hälften oder Viertel "
+                ),
+               "schritte": [
+                   "1. Trocknen: Legen Sie die Tomaten auf ein Backblech und trocknen "
+                    "Sie sie im Ofen bei 60°C für etwa 6-8 Stunden. Alternativ können "
+                    "Sie auch einen Dörrautomaten verwenden oder die Tomaten an der Sonne trocknen.",
+                   "2. Einlegen: Lassen Sie die getrockneten Tomaten abkühlen und betten Sie sie in ein Einmachglas.",
+                   "Fügen Sie die geschälten Knoblauchzehen und die Gewürze hinzu, bevor Sie das Öl darübergießen.",
+                    ],
+               "fertigstellung": (
+                   "Lagerung: Verschließen Sie das Glas gut und lagern Sie es kühl und dunkel. "
+                   "Nach etwa einer Woche haben die Tomaten ausreichend Aroma aufgenommen."
+                   ),
+               "tipps": (
+                   "Wie lange sind getrocknete Tomaten in Öl haltbar?\n\n"
+
+	                "Getrocknete Tomaten in Öl sind in der Regel etwa 6 bis 12 Monate haltbar, "
+                    "vorausgesetzt, sie werden luftdicht verpackt und an einem kühlen, dunklen "
+                    "Ort gelagert. Achten Sie darauf, dass die Tomaten vollständig mit Öl bedeckt sind, um Schimmelbildung zu vermeiden."
+               ),
+               "kategorie": "haltbarmachen",
+           },
+           {
+                "slug": "zucchiniSalsa",
+                "title": "Zucchini Salsa",
+                "beschreibung": "Zucchinischwemme ? Kein Problem, dieses Rezept verarbeitet viel Zucchini auf einmal und ist sehr simpel!",
+                "zutaten": [
+                   "1 kg Zucchini",
+                   "500g Paprika",
+                   "1.5 kg Ketchup",
+                   "300 ml Olivenöl",
+                   "500 g Zwiebeln",
+                   "2  Knoblauchzehen",
+                   "2 TL Tabasco",
+                   "1 TL Chilipulver",
+                   "2 TL Worcestershiresauce",
+                   "1 TL Kreuzkümmel",
+                   "1 EL Zucker",
+                   "3 TL Salz",
+
+               ],
+               "vorbereitung": (
+                    "Zucchini schälen und kleinschneiden, Paprika säubern und kleinschneiden. "
+                    "Zwiebeln und Knoblauch schälen und klein schneiden."
+                    "Alle weiteren Zutaten bereitstellen "
+                    "1 kg Zucchini | 500 g Paprika |500 g Zwiebel | 2 Knoblauchzehen \n\n"
+                    "Gläser säubern und heiß ausspülen, ebenso die Deckel und den Einfülltrichter (falls vorhanden)."
+                    
+                ),
+               "schritte": [
+                   "1. Alle Zutaten in einen großen Topf geben (oder noch besser, auf zwei Töpfe verteilen). "
+                
+                   "2. Das Ganze ca. 1 Stunde kochen lassen und sofort danach heiß in vorbereitete Gläser füllen.",
+                    ],
+               "fertigstellung": None,
+
+                   
+               "tipps": (
+                   "Diese Sauce kann man ungefähr 1 Jahr aufheben. Sie schmeckt kalt gut zu Fleisch oder Brot und warm zu Nudeln, Reis, mit Hackfleisch usw."
+
+               ),
+               "kategorie": "haltbarmachen",
+           },           
         ]
 
         # Gleichzeitige Starts dürfen keine doppelten Rezepte anlegen.

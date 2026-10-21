@@ -79,6 +79,11 @@ export default function Auth({ market, onChat }) {
           Konto erstellen
         </button>
       </div>
+      {hinweis && (
+        <p className="form-hint" role="status">
+          {hinweis}
+        </p>
+      )}
       <form className="auth-form" onSubmit={submit}>
         <label htmlFor="account-username">
           {mode === "login" ? "E-Mail-Adresse" : "Benutzername"}
