@@ -231,6 +231,7 @@ async function authenticate(mode, values) {
           password: credentials.password,
         }),
       });
+      return; 
     }
 const params = new URLSearchParams();
 

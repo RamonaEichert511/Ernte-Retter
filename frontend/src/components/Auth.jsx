@@ -3,34 +3,44 @@ import Konto from "./Konto";
 
 export default function Auth({ market, onChat }) {
   const [mode, setMode] = useState("login");
-  const [form, setForm] = useState({ username: "",email: "",password: ""});
+  const [form, setForm] = useState({ username: "", email: "", password: "" });
   const [error, setError] = useState("");
+  const [hinweis, setHinweis] = useState("");
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-async function submit(e) {
-  e.preventDefault();
-  setError("");
+  async function submit(e) {
+    e.preventDefault();
+    setError("");
+    setHinweis("");
 
-  try {
-    await market.authenticate(mode, form);
+    try {
+      await market.authenticate(mode, form);
 
-    setForm({
-      username: "",
-      email: "",
-      password: "",
-    });
+      setForm({
+        username: "",
+        email: "",
+        password: "",
+      });
 
-    window.location.hash = "marktplatz";
-  } catch (e) {
-    setError(
-      e.status === 401
-        ? "E-Mail-Adresse oder Passwort ist falsch."
-        : e.status
-          ? e.message
-          : "Die Anmeldung konnte nicht abgeschlossen werden. Bitte versuche es erneut.",
-    );
+      if (mode === "register") {
+        setMode("login");
+        setHinweis(
+          "Dein Konto wurde erstellt. Bitte bestätige zuerst deine E-Mail-Adresse über den Link in deiner E-Mail. Danach kannst du dich hier anmelden.",
+        );
+        return;
+      }
+
+      window.location.hash = "marktplatz";
+    } catch (e) {
+      setError(
+        e.status === 401
+          ? "E-Mail-Adresse oder Passwort ist falsch."
+          : e.status
+            ? e.message
+            : "Die Anmeldung konnte nicht abgeschlossen werden. Bitte versuche es erneut.",
+      );
+    }
   }
-}
 
   if (market.loading) return <p role="status">Dein Konto wird geladen …</p>;
   if (market.user) {
@@ -44,9 +54,7 @@ async function submit(e) {
           ? "Schön, dass du wieder da bist."
           : "Dein Platz in der Gartenküche."}
       </h2>
-      <p>
-        Mit deinem Konto kannst du Ernte anbieten und reservieren.
-      </p>
+      <p>Mit deinem Konto kannst du Ernte anbieten und reservieren.</p>
       <div className="auth-tabs">
         <button
           className="secondary-button"
