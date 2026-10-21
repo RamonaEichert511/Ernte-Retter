@@ -170,7 +170,7 @@ Projektvorstellung: 21. Oktober 2026
 
   #### *21.Oktober*
 ######  Bendix:
-  - supportmail “info@ernteretter” eingerichtet (SES, Lambda, IAM, S3)
+  - supportmail “info@ernteretter.de” eingerichtet (SES, Lambda, IAM, S3)
 
 ######  Lee:
   - Präsentation und Wording 
