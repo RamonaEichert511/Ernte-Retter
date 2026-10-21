@@ -542,22 +542,22 @@ def init_db():
                 "Die Gurken sind bereits nach 2 bis 3 Tagen genussbereit. "
             ),
             "tipps": (
-                "Würze nach Geschmack"
-                " Das Gute beim selber Einmachen ist nicht nur, dass man weiß was drin ist, man kann das Ganze auch so würzen, wie es einem schmeckt. "
-                "Wenn man nicht so experimentierfreudig ist, kann man bei klassischen Gurkengewürzen wie Dill, Senfkörnern, Wacholder und Lorbeer bleiben. "
+                "Würze nach Geschmack \n\n"
+                "Das Gute beim selber Einmachen ist nicht nur, dass man weiß was drin ist, man kann das Ganze auch so würzen, wie es einem schmeckt.  "
+                "Wenn man nicht so experimentierfreudig ist, kann man bei klassischen Gurkengewürzen wie Dill, Senfkörnern, Wacholder und Lorbeer bleiben.  "
 
-                "Kreative Würz-ideen wären: "
-                    "- Ingwer, Kurkuma, Knoblauch, Chilli"
-                    "- Pfeffer, Zimt, Wacholder "
-                    "- Honig statt Zucker "
-                "... oder einfach das, was dir schmeckt. "
-                "Ob Frische oder getrocknete Gewürze/Kräuter genommen werden, ist egal. "
-                "Wenn du einen großen Schwung zubereiten möchtest mit verschiedenen Geschmacksrichtungen, koche den Basis-Sud und fülle die Gewürze direkt ins Glas. "
-                "Bei der Zuckermenge kannst du Variieren.  So wie es im Rezept steht, ist es eher saurer, falls du es süßer magst, gib etwas mehr Zucker hinzu und probiere den Sud vor dem einfüllen. "
-                "Bei der Wahl der Zwiebeln hast du freie Wahl. "
-                "Ich nehme sehr gerne Rote Zwiebeln,der Sud bekommt eine schön rosa Farbe. "
-                "die eingelegten Zwiebeln schmecken auch wunderbar, Mild und nicht zu intensiv nach Zwiebel, so essen wir sie am Liebsten. "
-                "auch die kinder verziehen nicht das Gesicht wenn sie mal eine erwischen. "
+                "Kreative Würz-ideen wären: \n\n"
+                    " - Ingwer, Kurkuma, Knoblauch, Chilli \n"
+                    " - Pfeffer, Zimt, Wacholder \n"
+                    " - Honig statt Zucker \n"
+                " ... oder einfach das, was dir schmeckt.\n\n"
+                "Ob Frische oder getrocknete Gewürze/Kräuter genommen werden, ist egal. \n"
+                "Wenn du einen großen Schwung zubereiten möchtest mit verschiedenen Geschmacksrichtungen, koche den Basis-Sud und fülle die Gewürze direkt ins Glas.\n"
+                "Bei der Zuckermenge kannst du Variieren.\n So wie es im Rezept steht, ist es eher saurer, falls du es süßer magst, gib etwas mehr Zucker hinzu und probiere den Sud vor dem einfüllen.\n"
+                "Bei der Wahl der Zwiebeln hast du freie Wahl. \n"
+                "Ich nehme sehr gerne Rote Zwiebeln,der Sud bekommt eine schön rosa Farbe.\n"
+                "Die eingelegten Zwiebeln schmecken auch wunderbar, Mild und nicht zu intensiv nach Zwiebel, so essen wir sie am Liebsten.\n"
+                "Die kinder verziehen auch nicht das Gesicht wenn sie mal eine erwischen.\n "
 
             ),
             "kategorie": "haltbarmachen",
