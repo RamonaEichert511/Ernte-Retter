@@ -324,7 +324,7 @@ function App() {
   };
 
   // Schritt 4: Task hinzufügen
-  const addTask = async (title) => {
+  const addTask = async (title, priority, kategorie) => {
     if (!market.user) {
       alert("Bitte melde dich an, um Aufgaben zu erstellen.");
       return;
@@ -332,7 +332,7 @@ function App() {
     try {
       const newTask = await api("/aufgaben", {
         method: "POST",
-        body: JSON.stringify({ title }),
+        body: JSON.stringify({ title, priority, kategorie }),
       });
       setTasks((previousTasks) => [...previousTasks, newTask]);
     } catch (error) {
