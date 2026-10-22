@@ -136,6 +136,11 @@ def init_db():
             """
         )
         conn.execute(
+            "ALTER TABLE nachrichten "
+            "ADD COLUMN IF NOT EXISTS ausgeblendet_fuer "
+            "INTEGER[] NOT NULL DEFAULT '{}'"
+        )
+        conn.execute(
             "CREATE INDEX IF NOT EXISTS nachrichten_offer_idx "
             "ON nachrichten (offer_id, created_at)"
         )

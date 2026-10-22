@@ -578,8 +578,9 @@ def list_nachrichten(
         bedingung, params = _zwischen(offer_id, me, mit)
         rows = conn.execute(
             f"SELECT * FROM nachrichten WHERE {bedingung} "
+            "AND NOT (%s = ANY(ausgeblendet_fuer)) "
             "ORDER BY created_at, id",
-            params,
+            (*params, me),
         ).fetchall()
         conn.execute(
             "UPDATE nachrichten SET gelesen = TRUE WHERE offer_id = %s "
@@ -598,20 +599,24 @@ def inbox(current_user: dict = Depends(get_current_user)):
             "  SELECT n.*, CASE WHEN n.sender_id = %s "
             "    THEN n.recipient_id ELSE n.sender_id END AS partner_id "
             "  FROM nachrichten n "
-            "  WHERE n.sender_id = %s OR n.recipient_id = %s"
+            "  WHERE (n.sender_id = %s OR n.recipient_id = %s) "
+            "    AND NOT (%s = ANY(n.ausgeblendet_fuer))"
             ") "
             "SELECT DISTINCT ON (k.offer_id, k.partner_id) "
             "  k.offer_id, o.title AS offer_title, k.partner_id, "
             "  u.name AS partner_name, k.text AS letzte_nachricht, "
             "  k.created_at AS letzte_zeit, "
             "  (SELECT COUNT(*) FROM nachrichten x "
-            "   WHERE x.offer_id = k.offer_id AND x.sender_id = k.partner_id "
-            "   AND x.recipient_id = %s AND NOT x.gelesen)::int AS ungelesen "
+            "   WHERE x.offer_id = k.offer_id "
+            "   AND x.sender_id = k.partner_id "
+            "   AND x.recipient_id = %s AND NOT x.gelesen "
+            "   AND NOT (%s = ANY(x.ausgeblendet_fuer)))::int AS ungelesen "
             "FROM k JOIN offers o ON o.id = k.offer_id "
             "JOIN users u ON u.id = k.partner_id "
-            "ORDER BY k.offer_id, k.partner_id, k.created_at DESC",
-            (me, me, me, me),
+            "ORDER BY k.offer_id, k.partner_id, k.created_at DESC, k.id DESC",
+            (me, me, me, me, me, me),
         ).fetchall()
+
     return sorted(rows, key=lambda r: r["letzte_zeit"], reverse=True)
 
 @app.delete("/offers/{offer_id}/nachrichten", status_code=status.HTTP_204_NO_CONTENT)
@@ -640,10 +645,13 @@ def delete_nachrichten(
         # Use the existing _zwischen helper to find messages between 'me' and 'mit'
         bedingung, params = _zwischen(offer_id, me, mit)
         
-        # Delete the messages for this conversation
+        # Nachrichten nur für den angemeldeten Nutzer ausblenden.
         conn.execute(
-            f"DELETE FROM nachrichten WHERE {bedingung}",
-            params,
+            "UPDATE nachrichten "
+            "SET ausgeblendet_fuer = array_append(ausgeblendet_fuer, %s) "
+            f"WHERE {bedingung} "
+            "AND NOT (%s = ANY(ausgeblendet_fuer))",
+            (me, *params, me),
         )
 
 
