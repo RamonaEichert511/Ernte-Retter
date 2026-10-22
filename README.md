@@ -168,7 +168,7 @@ Projektvorstellung: 21. Oktober 2026
   - Chat entfernen button hinzugefügt
   - Impressum 
 
-  #### *21.Oktober*
+#### *21.Oktober*
 ######  Bendix:
   - supportmail “info@ernteretter.de” eingerichtet (SES, Lambda, IAM, S3)
 
@@ -180,3 +180,20 @@ Projektvorstellung: 21. Oktober 2026
   - Email bestätigungs fix für registrierung behoben 
   - Unsere Geschichte umbenannt in vom Beet auf den Teller 
   - vom Beet auf den Teller in “uns/wir” version umgeschrieben
+
+#### *22.Oktober*
+######  Bendix:
+  - Zoom-Hintergrundbild erstellt
+  - “Test” gmail erstellt
+  - Präsi + Wording-Feinschliff
+
+
+######  Lee:
+  - Präsentations Wording 
+
+######  Ramona:
+  - Präsentations folie 
+  - fix aufgaben, priorität und kategorie
+  - fix chat löschen 
+  - fix inaktivität prüfen 
+  - Präsentations Wording 
