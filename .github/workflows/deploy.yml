@@ -86,8 +86,9 @@ jobs:
             chmod 600 .env.new
             mv .env.new .env
 
-            # 3. Docker-Container neu erzeugen und im Hintergrund starten
-            docker compose up -d --build --force-recreate
+            # 3. Nur Backend und Frontend neu bauen und starten (Datenbank bleibt sicher unberührt)
+            docker compose build backend frontend
+            docker compose up -d --no-deps backend frontend
 
             # 4. Healthcheck direkt im Backend-Container
             echo "Warte darauf, dass das Backend im Container bereit ist..."
