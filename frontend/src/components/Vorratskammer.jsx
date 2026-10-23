@@ -4,15 +4,15 @@ import { api } from "../services/api";
 
 const reifezeiten = {
   "saure gurken": 42,
-  kimchi: 5,
-  sauerkraut: 21,
-  essiggurken: 28,
-  marmelade: 1,
+  "kimchi": 5,
+  "sauerkraut": 21,
+  "essiggurken": 28,
+  "marmelade": 1,
   "eingelegte paprika": 10,
   "fermentierte tomaten": 7,
-  pickles: 14,
-  apfelmus: 0,
-  rotkohl: 2,
+  "pickles": 14,
+  "apfelmus": 0,
+  "rotkohl": 2,
   "salz zitronen": 90,
   "eingelegte zwiebeln": 14,
 };
