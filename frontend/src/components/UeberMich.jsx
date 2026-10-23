@@ -2,7 +2,7 @@ function UeberMich() {
   return (
     <section id="ueber-mich">
       <div className="story-container">
-        <h2>Vom Beet auf den Teller</h2>
+        <h2>Vom Beet ins Glas</h2>
         <p>
           <strong>Hallo! Schön, dass du da bist.</strong> Wer selbst gärtnert,
           backt und kocht, kennt diesen einen Moment: Plötzlich ist der Korb

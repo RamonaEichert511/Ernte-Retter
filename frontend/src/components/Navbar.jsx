@@ -102,7 +102,7 @@ export default function Navbar({
             onClick={() => setOpen(false)}
           >
             <Icon name="leaf" />
-            Vom Beet auf den Teller
+            Vom Beet ins Glas
           </a>
           <button onClick={toggleDarkMode} aria-pressed={darkMode}>
             <Icon name={darkMode ? "sun" : "moon"} />
