@@ -11,7 +11,7 @@ const reifezeiten = {
   "eingelegte paprika": 10,
   "fermentierte tomaten": 7,
   "pickles": 14,
-  "apfelmus": 0,
+  "apfelmus": 1,
   "rotkohl": 2,
   "salz zitronen": 90,
   "eingelegte zwiebeln": 14,
