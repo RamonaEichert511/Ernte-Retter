@@ -81,7 +81,8 @@ def mail_verifizierung(name: str, link: str) -> tuple[str, str]:
         "über diesen Link (24 Stunden gültig):\n\n"
         f"{link}\n\n"
         "Wenn du dich nicht registriert hast, kannst du diese E-Mail "
-        "ignorieren.\n",
+        "ignorieren.\n"
+        "Für Rückfragen kontaktiere uns unter: info@ernteretter.de",
     )
 
 
@@ -96,7 +97,8 @@ def mail_reserviert(owner_name: str, titel: str, link: str) -> tuple[str, str]:
         f'Dein Inserat "{titel}" wurde reserviert',
         f"Hallo {owner_name},\n\n"
         f'jemand hat dein Inserat "{titel}" reserviert. '
-        f"Hier geht es zum Inserat:\n\n{link}\n",
+        f"Hier geht es zum Inserat:\n\n{link}\n"
+        "Für Rückfragen kontaktiere uns unter: info@ernteretter.de",
     )
 
 
@@ -104,5 +106,6 @@ def mail_kontakt(titel: str, link: str) -> tuple[str, str]:
     return (
         f'Neue Nachricht zu "{titel}"',
         f'Du hast eine neue Nachricht zum Inserat "{titel}" erhalten. '
-        f"Lies sie hier:\n\n{link}\n",
+        f"Lies sie hier:\n\n{link}\n"
+        "Für Rückfragen kontaktiere uns unter: info@ernteretter.de",
     )
