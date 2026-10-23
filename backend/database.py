@@ -1063,6 +1063,64 @@ def init_db():
             ),
             "kategorie": "abendessen",
         },
+        {
+            "slug": "ApfelmusSchraubglaeser",
+            "title": "Apfelmus in Schraubgläsern einkochen",
+            "beschreibung": (
+                "Aus 4 kg Äpfeln. Die Anzahl der Gläser hängt "
+                "von der Apfelsorte und der fertigen Musmenge ab."
+            ),
+            "zutaten": [
+                "4 kg Äpfel",
+                "Saft von 2 Zitronen",
+                "1,2 Liter Wasser",
+                "120 g Zucker",
+            ],
+            "vorbereitung": (
+                "Zum Einkochen geeignete Schraubgläser und passende Deckel "
+                "gründlich reinigen und nach Herstellerangaben vorbereiten. "
+                "Gläser bis zum Befüllen heiß halten.\n\n"
+                "Äpfel waschen, schälen und vierteln. Kerngehäuse entfernen "
+                "und das Fruchtfleisch klein schneiden. Zitronen auspressen."
+            ),
+            "schritte": [
+                "1. Äpfel, Zitronensaft, Wasser und Zucker in einen großen "
+                "Topf geben. Die Menge bei Bedarf auf zwei Töpfe verteilen.",
+
+                "2. Alles zugedeckt etwa 10–15 Minuten kochen, "
+                "bis die Äpfel weich sind. Gelegentlich umrühren. "
+                "Bei dieser Menge kann die Garzeit länger ausfallen.",
+
+                "3. Äpfel fein pürieren und das Mus unter Rühren "
+                "erneut aufkochen.",
+
+                "4. Das heiße Mus in die vorbereiteten Gläser füllen. "
+                "Etwa 1,3 cm Platz zum Rand lassen. Luftblasen entfernen, "
+                "Glasränder säubern und die Gläser nach Herstellerangaben "
+                "verschließen.",
+            ],
+            "fertigstellung": (
+                "Die heißen Gläser auf einen Einkochrost in einen "
+                "Topf mit heißem Wasser stellen. Das Wasser muss "
+                "mindestens 2,5 cm über den Deckeln stehen.\n\n"
+                "Das Wasser zum sprudelnden Kochen bringen. "
+                "Gläser bis etwa 500 ml bei einer Höhenlage bis 300 m "
+                "15 Minuten im durchgehend kochenden Wasser einkochen. "
+                "Die Zeit beginnt, sobald das Wasser wieder kocht. "
+                "In höheren Lagen gelten längere Einkochzeiten.\n\n"
+                "Herd ausschalten, Topfdeckel abnehmen und 5 Minuten warten. "
+                "Gläser vorsichtig herausnehmen und aufrecht auf einem "
+                "Küchentuch 12–24 Stunden ungestört abkühlen lassen. "
+                "Deckel nicht nachziehen.\n\n"
+                "Anschließend den Verschluss prüfen. Gläser ohne Vakuum "
+                "in den Kühlschrank stellen und zeitnah verbrauchen."
+            ),
+            "tipps": (
+                "Zimt, Vanille oder Kardamom passen "
+                "als geschmackliche Ergänzung."
+            ),
+            "kategorie": "haltbarmachen",
+        },
 
     ]
 

@@ -60,7 +60,8 @@ function Vorratskammer() {
     }
 
     const einlegeDatumObjekt = new Date(einlegedatum);
-    const einlegedatumFormatiert = einlegeDatumObjekt.toLocaleDateString("de-DE");
+    const einlegedatumFormatiert =
+      einlegeDatumObjekt.toLocaleDateString("de-DE");
     const fertigAm = new Date(einlegedatum);
     fertigAm.setDate(fertigAm.getDate() + tage);
 
@@ -89,10 +90,7 @@ function Vorratskammer() {
         }),
       });
 
-      setVorratsListe((bisherigeListe) => [
-        ...bisherigeListe,
-        neuerEintrag,
-      ]);
+      setVorratsListe((bisherigeListe) => [...bisherigeListe, neuerEintrag]);
 
       setProdukt("");
       setEinlegedatum("");
@@ -112,7 +110,7 @@ function Vorratskammer() {
       });
 
       setVorratsListe((bisherigeListe) =>
-        bisherigeListe.filter((eintrag) => eintrag.id !== id)
+        bisherigeListe.filter((eintrag) => eintrag.id !== id),
       );
     } catch (error) {
       console.error("Fehler beim Löschen des Weckers:", error);
@@ -127,16 +125,20 @@ function Vorratskammer() {
     <section id="wecker">
       <h2>Meine Vorratskammer</h2>
       <p>
-        Hier findest du eine Übersicht deiner eingelegten Vorräte und wie lange sie noch
-        brauchen bis sie perfekt schmecken.
+        Hier findest du eine Übersicht deiner eingelegten Vorräte und wie lange
+        sie noch brauchen bis sie perfekt schmecken.
       </p>
 
       <ul className="wecker-produkte">
         <li>
-          <strong>In unserem Wecker stehen dir für folgende Produkte die Reifezeiten zur Verfügung:</strong>
+          <strong>
+            In unserem Wecker stehen dir für folgende Produkte die Reifezeiten
+            zur Verfügung:
+          </strong>
           <br />
-          Saure Gurken, Kimchi, Sauerkraut, Essiggurken, Marmelade, Eingelegte Paprika,
-          Fermentierte Tomaten, Pickles, Apfelmus, Rotkohl, Salz Zitronen, Eingelegte Zwiebeln.
+          Saure Gurken, Kimchi, Sauerkraut, Essiggurken, Marmelade, Eingelegte
+          Paprika, Fermentierte Tomaten, Pickles, Apfelmus, Rotkohl, Salz
+          Zitronen, Eingelegte Zwiebeln.
         </li>
       </ul>
 
@@ -162,7 +164,9 @@ function Vorratskammer() {
       </div>
 
       {meldung && (
-        <div className={`wecker-meldung wecker-${meldung.typ}`}>{meldung.text}</div>
+        <div className={`wecker-meldung wecker-${meldung.typ}`}>
+          {meldung.text}
+        </div>
       )}
 
       <div id="sortier-buttons">
