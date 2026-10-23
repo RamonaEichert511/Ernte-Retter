@@ -18,6 +18,7 @@ import Dashboard from "./components/Dashboard";
 import TaskForm from "./components/TaskForm";
 import TaskList from "./components/TaskList";
 import useLocalStorage from "./hooks/useLocalStorage";
+import EmailBestaetigung from "./components/EmailBestaetigung";
 import "./App.css";
 
 function App() {
@@ -37,6 +38,7 @@ function App() {
     "ueber-mich",
     "konto",
     "impressum",
+    "verify",
   ];
   const readView = () => {
     const hashView = window.location.hash.slice(1);
@@ -322,7 +324,7 @@ function App() {
   };
 
   // Schritt 4: Task hinzufügen
-  const addTask = async (title) => {
+  const addTask = async (title, priority, kategorie) => {
     if (!market.user) {
       alert("Bitte melde dich an, um Aufgaben zu erstellen.");
       return;
@@ -330,7 +332,7 @@ function App() {
     try {
       const newTask = await api("/aufgaben", {
         method: "POST",
-        body: JSON.stringify({ title }),
+        body: JSON.stringify({ title, priority, kategorie }),
       });
       setTasks((previousTasks) => [...previousTasks, newTask]);
     } catch (error) {
@@ -430,6 +432,11 @@ function App() {
       />
       <div className="workspace">
         <main key={activeView} id="main-content" tabIndex={-1}>
+          {activeView === "verify" && (
+            <div className="page-panel">
+              <EmailBestaetigung />
+            </div>
+          )}
           {market.error && (
             <p className="form-error" role="alert">
               {market.error}

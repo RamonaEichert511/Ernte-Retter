@@ -117,10 +117,71 @@ useEffect(() => {
 
   let ended = false;
   let lastSaved = 0;
+  let renewalPending = false;
+  let lastRenewalAttempt = 0;
 
   // Bei bereits bestehender Anmeldung einmalig initialisieren.
   if (!localStorage.getItem(activityKey)) {
     localStorage.setItem(activityKey, String(Date.now()));
+  }
+    let lastReportedActivity = Number(
+    localStorage.getItem(activityKey),
+  );
+
+  async function renewSession() {
+    if (renewalPending || !checkSession()) return;
+
+    const activity = Number(localStorage.getItem(activityKey));
+    const now = Date.now();
+
+    // Nur neue Bedienung melden, höchstens einmal pro 30 Sekunden.
+    if (
+      activity <= lastReportedActivity ||
+      now - lastRenewalAttempt < 30000
+    ) {
+      return;
+    }
+
+    const requestToken = getToken();
+
+    renewalPending = true;
+    lastRenewalAttempt = now;
+
+    try {
+      const result = await api("/auth/activity", {
+        method: "POST",
+        body: JSON.stringify({
+          last_activity_at: new Date(activity).toISOString(),
+        }),
+      });
+
+      // Nach Abmeldung oder Tokenwechsel keine alte Antwort übernehmen.
+      if (
+        ended ||
+        getToken() !== requestToken ||
+        !checkSession()
+      ) {
+        return;
+      }
+
+      if (!result?.access_token) {
+        throw new Error(
+          "Die Sitzungsverlängerung hat keinen Token zurückgegeben.",
+        );
+      }
+
+      saveToken(result.access_token);
+      lastReportedActivity = activity;
+    } catch (error) {
+      if (!ended && error.status !== 401) {
+        console.warn(
+          "Sitzung konnte nicht verlängert werden:",
+          error,
+        );
+      }
+    } finally {
+      renewalPending = false;
+    }
   }
 
   function endSession() {
@@ -171,6 +232,7 @@ useEffect(() => {
 
     lastSaved = now;
     localStorage.setItem(activityKey, String(now));
+    void renewSession();
   }
 
   function handleVisibility() {
@@ -192,9 +254,14 @@ useEffect(() => {
 
   checkSession();
 
-  const interval = window.setInterval(checkSession, 1000);
+    const interval = window.setInterval(() => {
+    if (checkSession()) {
+      void renewSession();
+    }
+  }, 1000);
 
   return () => {
+    ended = true;
     window.clearInterval(interval);
 
     events.forEach((event) => {
@@ -231,6 +298,7 @@ async function authenticate(mode, values) {
           password: credentials.password,
         }),
       });
+      return; 
     }
 const params = new URLSearchParams();
 

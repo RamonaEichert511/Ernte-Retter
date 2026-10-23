@@ -32,9 +32,7 @@ function RezeptDetail({ id, onZurueck, onFavoritEntfernt }) {
         }
       } catch (error) {
         if (!controller.signal.aborted) {
-          setFehler(
-            "Das Rezept konnte nicht geladen werden."
-          );
+          setFehler("Das Rezept konnte nicht geladen werden.");
         }
       } finally {
         if (!controller.signal.aborted) {
@@ -65,16 +63,12 @@ function RezeptDetail({ id, onZurueck, onFavoritEntfernt }) {
         });
 
         if (!controller.signal.aborted) {
-          setFavorit(
-            daten.some((eintrag) => eintrag.id === Number(id))
-          );
+          setFavorit(daten.some((eintrag) => eintrag.id === Number(id)));
           setFavoritBereit(true);
         }
       } catch (error) {
         if (!controller.signal.aborted) {
-          setFavoritFehler(
-            "Der Favoritenstatus konnte nicht geladen werden."
-          );
+          setFavoritFehler("Der Favoritenstatus konnte nicht geladen werden.");
         }
       }
     }
@@ -111,7 +105,7 @@ function RezeptDetail({ id, onZurueck, onFavoritEntfernt }) {
       }
     } catch (error) {
       setFavoritFehler(
-        "Die Änderung konnte nicht gespeichert werden. Bitte versuche es erneut."
+        "Die Änderung konnte nicht gespeichert werden. Bitte versuche es erneut.",
       );
     } finally {
       setSpeichert(false);
@@ -120,17 +114,11 @@ function RezeptDetail({ id, onZurueck, onFavoritEntfernt }) {
 
   return (
     <section className="rezept-detail" aria-busy={laedt}>
-      <button
-        className="mein-button"
-        type="button"
-        onClick={onZurueck}
-      >
+      <button className="mein-button" type="button" onClick={onZurueck}>
         ← Zurück
       </button>
 
-      {laedt && (
-        <p role="status">Rezept wird geladen …</p>
-      )}
+      {laedt && <p role="status">Rezept wird geladen …</p>}
 
       {fehler && <p role="alert">{fehler}</p>}
 
@@ -152,42 +140,61 @@ function RezeptDetail({ id, onZurueck, onFavoritEntfernt }) {
               : "Abendessen"}
           </p>
 
-          {rezept.owner_name && (
-            <p>Rezept von {rezept.owner_name}</p>
-          )}
+          {rezept.owner_name && <p>Rezept von {rezept.owner_name}</p>}
 
           {rezept.info && <p>{rezept.info}</p>}
-
-          {rezept.beschreibung && (
-            <p style={{ whiteSpace: "pre-line" }}>
-              {rezept.beschreibung}
-            </p>
+          {rezept.beschreibung?.trim() && (
+            <p className="rezept-beschreibung">{rezept.beschreibung}</p>
           )}
 
-          <h3>Zutaten</h3>
+          <section className="rezept-abschnitt">
+            <h3>Zutaten</h3>
 
-          {rezept.zutaten.length > 0 ? (
-            <ul>
-              {rezept.zutaten.map((zutat, index) => (
-                <li key={index}>{zutat}</li>
-              ))}
-            </ul>
-          ) : (
-            <p>Noch keine Zutaten hinterlegt.</p>
+            {rezept.zutaten?.length > 0 ? (
+              <ul className="rezept-zutaten">
+                {rezept.zutaten.map((zutat, index) => (
+                  <li key={index}>{zutat}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>Noch keine Zutaten hinterlegt.</p>
+            )}
+          </section>
+
+          {rezept.vorbereitung?.trim() && (
+            <section className="rezept-abschnitt">
+              <h3>Vorbereitung</h3>
+              <p className="rezept-text">{rezept.vorbereitung}</p>
+            </section>
           )}
 
-          <h3>Zubereitung</h3>
+          <section className="rezept-abschnitt">
+            <h3>Zubereitung</h3>
 
-          {rezept.schritte.length > 0 ? (
-            <ol style={{ listStyle: "none", paddingLeft: 0 }}>
-              {rezept.schritte.map((schritt, index) => (
-                <li key={index}>{schritt}</li>
-              ))}
-            </ol>
-          ) : (
-            <p>Noch keine Zubereitung hinterlegt.</p>
+            {rezept.schritte?.length > 0 ? (
+              <ol className="rezept-schritte">
+                {rezept.schritte.map((schritt, index) => (
+                  <li key={index}>{schritt}</li>
+                ))}
+              </ol>
+            ) : (
+              <p>Noch keine Zubereitung hinterlegt.</p>
+            )}
+          </section>
+
+          {rezept.fertigstellung?.trim() && (
+            <section className="rezept-abschnitt">
+              <h3>Fertigstellung</h3>
+              <p className="rezept-text">{rezept.fertigstellung}</p>
+            </section>
           )}
 
+          {rezept.tipps?.trim() && (
+            <section className="rezept-abschnitt rezept-tipps">
+              <h3>Tipps</h3>
+              <p className="rezept-text">{rezept.tipps}</p>
+            </section>
+          )}
           {angemeldet ? (
             <button
               className="mein-button"
@@ -204,16 +211,14 @@ function RezeptDetail({ id, onZurueck, onFavoritEntfernt }) {
             </button>
           ) : (
             <p>
-              <a href="#konto">Melde dich an</a>, um das
-              Rezept als Favorit zu speichern.
+              <a href="#konto">Melde dich an</a>, um das Rezept als Favorit zu
+              speichern.
             </p>
           )}
         </>
       )}
 
-      {favoritFehler && (
-        <p role="alert">{favoritFehler}</p>
-      )}
+      {favoritFehler && <p role="alert">{favoritFehler}</p>}
 
       {(fehler || favoritFehler) && (
         <button

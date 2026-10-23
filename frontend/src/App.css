@@ -1040,3 +1040,65 @@ main:focus {
     right: 16px;
   }
 }
+/* Rezeptdetails */
+.rezept-detail {
+  width: 100%;
+  max-width: 860px;
+  min-width: 0;
+  margin-inline: auto;
+  overflow-wrap: anywhere;
+}
+
+.rezept-detail .rezept-beschreibung {
+  margin: 20px 0 28px;
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+.rezept-detail .rezept-abschnitt {
+  margin-block: 28px;
+}
+
+.rezept-detail .rezept-abschnitt h3 {
+  margin: 0 0 14px;
+}
+
+.rezept-detail .rezept-text {
+  margin: 0;
+  line-height: 1.8;
+  white-space: pre-line;
+}
+
+.rezept-detail .rezept-zutaten {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.rezept-detail .rezept-zutaten li {
+  padding-block: 6px;
+  line-height: 1.6;
+}
+
+.rezept-detail .rezept-schritte {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.rezept-detail .rezept-schritte li {
+  margin-bottom: 18px;
+  line-height: 1.8;
+  white-space: pre-line;
+}
+
+.rezept-detail .rezept-schritte li:last-child {
+  margin-bottom: 0;
+}
+
+.rezept-detail .rezept-tipps {
+  padding: 18px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+}

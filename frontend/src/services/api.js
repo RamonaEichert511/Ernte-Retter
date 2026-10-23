@@ -18,6 +18,8 @@ export async function api(path, options = {}) {
   const token = getToken();
 
   const protectedRequest =
+    path === "/auth/activity" ||
+    path === "/auth/logut" ||
     path === "/me" ||
       path.startsWith("/nachrichten/") ||
     /^\/offers\/[^/]+\/nachrichten(?:\?.*)?$/.test(path) ||
@@ -54,7 +56,12 @@ export async function api(path, options = {}) {
     headers,
   });
 
-  if (response.status === 401) {
+    if (
+    response.status === 401 &&
+    protectedRequest &&
+    token &&
+    getToken() === token
+  ) {
     clearToken();
     window.dispatchEvent(new Event("ernte-retter:unauthorized"));
     window.location.hash = "konto";
