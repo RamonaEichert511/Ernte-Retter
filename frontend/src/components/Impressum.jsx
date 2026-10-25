@@ -6,7 +6,8 @@ export default function Impressum() {
       <p>© 2026 Cookie Crew 🍪 Ramona 🍪 Lee 🍪 Bendix</p>
 
       <h3>Angaben gemäß § 5 DDG</h3>
-
+      <p> Rückfragen und Kontakt: info@ernteretter.de</p>
+      
       <p>Das ist ein Schulprojekt und dient ausschließlich Bildungszwecken.</p>
     </section>
   );
