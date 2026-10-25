@@ -16,7 +16,7 @@ services:
     env_file:
       - .env
     environment:
-      - MAIL_FROM=ernteretter@ernteretter.de
+      - MAIL_FROM=info@ernteretter.de
       - AWS_REGION=eu-central-1
     ports:
       - "8000:8000"
